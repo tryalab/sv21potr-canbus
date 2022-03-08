@@ -1,0 +1,32 @@
+{
+    "nodes": {
+        "hmi": {
+            "name": "HMI"
+        },
+        "sns": {
+            "name": "Sensor"
+        },
+        "act": {
+            "name": "Actuator"
+        },
+        "com": {
+            "name": "Communication"
+        }
+    },
+    "defines": {
+        "states"  : ["OFF", "ON"],
+        "vlvwin"  : ["CLSD", "OPNND"],
+        "system"  : ["WARNING", "OKAY", "ERROR"],
+        "status"  : ["UNINITIALIZED", "OKAY", "ERROR"],
+        "esp32"   : ["UNINITIALIZED", "OKAY", "I2C_ERROR", "WIFI_ERROR", "NTP_ERROR", "MQTT_ERROR"]
+    },
+    "messages": [
+        {
+            "id":"0x100",
+            "setter":"",
+            "signals":[
+                {"name":"xxxxxxxxx",    "type":"uint8_t",  "start": 0, "length": 2, "values":"status", "getters":["hmi", "com"], "comment":"status of the terminal"}
+            ]
+        }
+    ]
+}
