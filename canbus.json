@@ -25,7 +25,6 @@
             "id":"0x100",
             "setter":"com",
             "signals":[
-<<<<<<< HEAD
                 {"name":"rtc_year",           "type":"uint8_t", "start": 0,  "length": 7, "values": [0, 99],   "getters": ["hmi", "com"], "comment": "Year of the rtc"},
                 {"name":"rtc_month",          "type":"uint8_t", "start": 7,  "length": 4, "values": [1, 12],   "getters": ["hmi", "com"], "comment": "Month of the rtc"},
                 {"name":"rtc_day",            "type":"uint8_t", "start": 11, "length": 5, "values": [1, 31],   "getters": ["hmi", "com"], "comment": "Day of the rtc"},
@@ -37,19 +36,6 @@
                 {"name":"terminal_status",    "type":"uint8_t", "start": 38, "length": 2, "values": "status",  "getters": ["hmi", "com"], "comment": "status of the terminal"},
                 {"name":"log_manager_status", "type":"uint8_t", "start": 40, "length": 2, "values": "status",  "getters": ["hmi", "com"], "comment": "status of the log manager"},
                 {"name":"sd_card_free_space", "type":"uint8_t", "start": 42, "length": 7, "values": [0, 100],  "getters": ["hmi", "com"], "comment": "Free space on the SD card in percent"}
-=======
-                {"name":"rtc_year",           "type":"uint8_t", "start": , "length": 7, "values": [0, 99],   "getters": ["hmi", "com"], "comment": "Year of the rtc"},
-                {"name":"rtc_month",          "type":"uint8_t", "start": -, "length": 4, "values": [1, 12],   "getters": ["hmi", "com"], "comment": "Month of the rtc"},
-                {"name":"rtc_day",            "type":"uint8_t", "start": -, "length": 5, "values": [1, 31],   "getters": ["hmi", "com"], "comment": "Day of the rtc"},
-                {"name":"rtc_hour",           "type":"uint8_t", "start": -, "length": 5, "values": [0, 23],   "getters": ["hmi", "com"], "comment": "Hour of the rtc"},
-                {"name":"rtc_minutes",        "type":"uint8_t", "start": -, "length": 6, "values": [0, 59],   "getters": ["hmi", "com"], "comment": "Minutes of the rtc"},
-                {"name":"rtc_seconds",        "type":"uint8_t", "start": -, "length": 6, "values": [0, 59],   "getters": ["hmi", "com"], "comment": "Seconds of the rtc"},
-                {"name":"esp32_status",       "type":"uint8_t", "start": -, "length": 3, "values": "esp32",  "getters": ["hmi", "com"], "comment": "status of the esp32"},
-                {"name":"rtc_status",         "type":"uint8_t", "start": -, "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the rtc"},
-                {"name":"terminal_status",    "type":"uint8_t", "start": -, "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the terminal"},
-                {"name":"log_manager_status", "type":"uint8_t", "start": -, "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the log manager"},
-                {"name":"sd_card_free_space", "type":"uint8_t", "start": -, "length": 7, "values": [0, 100],  "getters": ["hmi", "com"], "comment": "Free space on the SD card in percent"}
->>>>>>> 1976dd68b27063879c0b4d406122da182a4c5152
             ]
         },
         
