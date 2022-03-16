@@ -25,7 +25,7 @@
             "id":"0x100",
             "setter":"com",
             "signals":[
-                {"name":"rtc_year",           "type":"uint8_t", "start": -, "length": 7, "values": [0, 99],   "getters": ["hmi", "com"], "comment": "Year of the rtc"},
+                {"name":"rtc_year",           "type":"uint8_t", "start": , "length": 7, "values": [0, 99],   "getters": ["hmi", "com"], "comment": "Year of the rtc"},
                 {"name":"rtc_month",          "type":"uint8_t", "start": -, "length": 4, "values": [1, 12],   "getters": ["hmi", "com"], "comment": "Month of the rtc"},
                 {"name":"rtc_day",            "type":"uint8_t", "start": -, "length": 5, "values": [1, 31],   "getters": ["hmi", "com"], "comment": "Day of the rtc"},
                 {"name":"rtc_hour",           "type":"uint8_t", "start": -, "length": 5, "values": [0, 23],   "getters": ["hmi", "com"], "comment": "Hour of the rtc"},
