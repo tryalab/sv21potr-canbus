@@ -23,10 +23,80 @@
     "messages": [
         {
             "id":"0x100",
-            "setter":"",
+            "setter":"com",
             "signals":[
-                {"name":"xxxxxxxxx", "type":"uint8_t", "start": 0, "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the terminal"}
+                {"name":"rtc_year",           "type":"uint8_t", "start": 0,  "length": 7, "values": [0, 99],   "getters": ["act", "sns", "hmi"], "comment": "Year of the rtc"},
+                {"name":"rtc_month",          "type":"uint8_t", "start": 7,  "length": 4, "values": [1, 12],   "getters": ["act", "sns", "hmi"], "comment": "Month of the rtc"},
+                {"name":"rtc_day",            "type":"uint8_t", "start": 11, "length": 5, "values": [1, 31],   "getters": ["act", "sns", "hmi"], "comment": "Day of the rtc"},
+                {"name":"rtc_hour",           "type":"uint8_t", "start": 16, "length": 5, "values": [0, 23],   "getters": ["act", "sns", "hmi"], "comment": "Hour of the rtc"},
+                {"name":"rtc_minutes",        "type":"uint8_t", "start": 21, "length": 6, "values": [0, 59],   "getters": ["act", "sns", "hmi"], "comment": "Minutes of the rtc"},
+                {"name":"rtc_seconds",        "type":"uint8_t", "start": 27, "length": 6, "values": [0, 59],   "getters": ["act", "sns", "hmi"], "comment": "Seconds of the rtc"},
+                {"name":"esp32_status",       "type":"uint8_t", "start": 33, "length": 3, "values": "esp32",   "getters": ["hmi", "com"], "comment": "status of the esp32"},
+                {"name":"rtc_status",         "type":"uint8_t", "start": 36, "length": 2, "values": "status",  "getters": ["hmi", "com"], "comment": "status of the rtc"},
+                {"name":"terminal_status",    "type":"uint8_t", "start": 38, "length": 2, "values": "status",  "getters": ["hmi", "com"], "comment": "status of the terminal"},
+                {"name":"log_manager_status", "type":"uint8_t", "start": 40, "length": 2, "values": "status",  "getters": ["hmi", "com"], "comment": "status of the log manager"},
+                {"name":"sd_card_free_space", "type":"uint8_t", "start": 42, "length": 7, "values": [0, 100],  "getters": ["hmi", "com"], "comment": "Free space on the SD card in percent"}
             ]
-        }
+        },
+        
+        {
+            "id":"0x101",
+            "setter":"sns",
+            "signals":[
+                {"name":"temperature",                "type":"float",   "start": 0,  "length": 10, "values": [0.0, 50.0],  "getters": ["act", "hmi", "com"], "comment": "The ambient temperature"},
+                {"name":"temperature_possible_min",   "type":"uint8_t", "start": 10, "length": 6,  "values": [0, 50],      "getters": ["act", "hmi", "com"], "comment": "Minimum temperature"},
+                {"name":"temperature_possible_max",   "type":"uint8_t", "start": 16, "length": 6,  "values": [0, 50],      "getters": ["act", "hmi", "com"], "comment": "Maximum temperature"},
+                {"name":"humidity",                   "type":"uint8_t", "start": 22, "length": 7,  "values": [0, 100],     "getters": ["act", "hmi", "com"], "comment": "The ambient humidity percentage"},
+                {"name":"humidity_possible_min",      "type":"uint8_t", "start": 29, "length": 7,  "values": [0, 100],     "getters": ["act", "hmi", "com"], "comment": "Minimum humidity"},
+                {"name":"humidity_possible_max",      "type":"uint8_t", "start": 36, "length": 7,  "values": [0, 100],     "getters": ["act", "hmi", "com"], "comment": "Maximum humidity"},
+                {"name":"dht_sensor_status",          "type":"uint8_t", "start": 43, "length": 2,  "values": "status",     "getters": ["act", "hmi", "com"], "comment": "DHT sensor status"},
+                {"name":"light_intensity",            "type":"uint8_t", "start": 45, "length": 7,  "values": [0, 100],     "getters": ["act", "hmi", "com"], "comment": "The light intensity percentage"},
+                {"name":"ldr_sensor_status",          "type":"uint8_t", "start": 52, "length": 2,  "values": "status",     "getters": ["act", "hmi", "com"], "comment": "Light intensity sensor status"}
+            ]
+        },
+
+        {
+            "id": "0x102",
+            "setter": "sns",
+            "signals": [
+                {"name":"flow_rate",                  "type":"uint16_t","start": 0,  "length": 9,  "values": [17, 500],    "getters": ["act", "hmi", "com"], "comment": "Water flow rate"},
+                {"name":"flow_meter_sensor_status",   "type":"uint8_t", "start": 9,  "length": 2,  "values": "status",     "getters": ["act", "hmi", "com"], "comment": "The flow meter sensor status"},
+                {"name":"water_level",                "type":"uint8_t", "start": 11, "length": 7,  "values": [0, 100],     "getters": ["act", "hmi", "com"], "comment": "Water level percentage"},
+                {"name":"water_level_sensor_status",  "type":"uint8_t", "start": 18, "length": 2,  "values": "status",     "getters": ["act", "hmi", "com"], "comment": "Water level sensor status"},
+                {"name":"soil_moisture",              "type":"uint8_t", "start": 20, "length": 7,  "values": [0, 100],     "getters": ["act", "hmi", "com"], "comment": "The soil moisture percentage"},
+                {"name":"soil_moisture_sensor_status","type":"uint8_t", "start": 22, "length": 2,  "values": "status",     "getters": ["act", "hmi", "com"], "comment": "Soil moisture sensor status"}
+            ]       
+        },
+
+        {
+            "id":"0x103",
+            "setter":"act",
+            "signals":[
+                {"name":"heater_state",       "type":"uint8_t", "start": 0,   "length": 1, "values": "states", "getters": ["hmi", "com"], "comment": "The heater state"},
+                {"name":"fans_state",         "type":"uint8_t", "start": 1,   "length": 1, "values": "states", "getters": ["hmi", "com"], "comment": "The fan state"},
+                {"name":"window_state",       "type":"uint8_t", "start": 2,   "length": 1, "values": "vlvwin", "getters": ["hmi", "com"], "comment": "The window state"},
+                {"name":"led_state",          "type":"uint8_t", "start": 3,   "length": 7, "values": [0, 100], "getters": ["hmi", "com"], "comment": "Status of LED in percent"},
+                {"name":"water_valve_state",  "type":"uint8_t", "start": 10,  "length": 1, "values": "vlvwin", "getters": ["hmi", "com"], "comment": "State of water valve"},
+                {"name":"heater_status",      "type":"uint8_t", "start": 11,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "Status of heater"},
+                {"name":"fans_status",        "type":"uint8_t", "start": 13,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "Status of the fans"},
+                {"name":"window_status",      "type":"uint8_t", "start": 15,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "Status of the heater"},
+                {"name":"led_status",         "type":"uint8_t", "start": 17,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "LED status"},
+                {"name":"water_valve_status", "type":"uint8_t", "start": 19,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "Status of the water valve"},
+                {"name":"water_pump_status",  "type":"uint8_t", "start": 21,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "Status of the water pump"}  
+            ]
+        },
+
+        {
+            "id":"0x104",
+            "setter":"hmi",
+            "signals":[
+                {"name":"buzzer_status",  "type":"uint8_t",  "start":0, "length":2,  "range":"status", "getters": ["com", "act"], "comment":"Status of the buzzer"},
+                {"name":"display_status", "type":"uint8_t",  "start":2, "length":2,  "range":"status", "getters": ["com", "act"], "comment":"Status of the display"},
+                {"name":"rgb_led_status", "type":"uint8_t",  "start":4, "length":2,  "values":"status","getters": ["com", "act"], "comment":"Status of the RGBLED"},
+                {"name":"keypad_status",  "type":"uint8_t",  "start":6, "length":2,  "range":"status", "getters": ["com", "act"], "comment":"Status of the Keypad"},
+                {"name":"buzzer_state",   "type":"uint8_t",  "start":7, "length":1,  "values":"states","getters": ["com", "act"], "comment":"State of the buzzer"},
+                {"name":"led_state",      "type":"uint8_t",  "start":8, "length":1,  "range":"states", "getters": ["com", "act"], "comment":"State of the RGB LED"}
+            ]
+        }  
     ]
 }
