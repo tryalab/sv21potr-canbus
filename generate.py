@@ -93,14 +93,16 @@ for message in data['messages']:
                 break
 del data['messages']
 
+values = []
+
 for message in messages:
     for signal in message['signals']:
         if 'values' in signal:
+            values.append(signal['values'])
             signal['values'] = defines[signal['values']]
-
 
 write_file(Path(TEENSY_CANBUS_DIR, 'can_service.cpp'),
            service.get_content(node, mode, messages[:]))
 
 write_file(Path(TEENSY_INCLUDE_DIR, 'common.h'),
-           common.get_macros(node, mode, defines))
+           common.get_macros(values[:], defines))
