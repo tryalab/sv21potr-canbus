@@ -105,4 +105,4 @@ write_file(Path(TEENSY_CANBUS_DIR, 'can_service.cpp'),
            service.get_content(node, mode, messages[:]))
 
 write_file(Path(TEENSY_INCLUDE_DIR, 'common.h'),
-           common.get_macros(values[:], defines))
+           common.get_common_header(values[:], defines))
