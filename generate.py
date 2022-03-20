@@ -103,7 +103,7 @@ for message in messages:
                 values.append(signal['values'])
 
 write_file(Path(TEENSY_CANBUS_DIR, 'can_service.cpp'),
-           service.get_content(node, mode, messages[:]))
+           service.get_service_source(node, mode, messages[:]))
 
 write_file(Path(TEENSY_INCLUDE_DIR, 'common.h'),
            common.get_common_header(values[:]))
