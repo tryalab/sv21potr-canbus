@@ -1,10 +1,12 @@
-def get_common_header(values, defines):
+def get_common_header(values):
     macros = ''
+    name_list = []
 
-    for define in defines:
-        if define in values:
-            for index, name in enumerate(defines[define]):
-                macros += f"#define {define.upper()}_{name} {index}\n"
+    for value in values:
+        for index, name in enumerate(value):
+            if name not in name_list:
+                name_list.append(name)
+                macros += f"#define {name} {index}\n"
 
     header_content = f"""\
 #ifndef COMMON_H
