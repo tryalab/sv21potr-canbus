@@ -4,6 +4,7 @@ import json
 import shutil
 from pathlib import Path
 from generators import service
+from generators import common
 
 ROOT = Path(__file__).parent
 
@@ -92,11 +93,17 @@ for message in data['messages']:
                 break
 del data['messages']
 
+values = []
+
 for message in messages:
     for signal in message['signals']:
         if 'values' in signal:
             signal['values'] = defines[signal['values']]
-
+            if signal['values'] not in values:
+                values.append(signal['values'])
 
 write_file(Path(TEENSY_CANBUS_DIR, 'can_service.cpp'),
            service.get_content(node, mode, messages[:]))
+
+write_file(Path(TEENSY_INCLUDE_DIR, 'common.h'),
+           common.get_common_header(values[:]))
