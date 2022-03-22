@@ -14,7 +14,12 @@ def get_teensy_common_header(node, messages):
                                 if name not in name_list:
                                     name_list.append(name)
                                     macros += f"#define {name} {index}\n"
-
+        header_content = f"""\
+#ifndef COMMON_H
+#define COMMON_H
+    
+{macros}
+#endif /* COMMON_H */"""
 
     return header_content
 
@@ -32,4 +37,3 @@ def get_esp32_common_header(defines):
 #endif /* COMMON_H */"""
 
     return header_esp32
-
