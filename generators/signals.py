@@ -46,24 +46,10 @@ print(str)
 
 for x in range(0, len(meddelande)):
     signals = json_data['messages'][x]['setter']  # change signals to setter
-    print(type(signals))
-    """ for signal in signals:
-        print(signal)
-        #str += f"{signal['name']}      {signal['type']}          {signal['comment']}            \n"
- """
-    """  str += "/**\n"
-            if 'range' in signal:
-                str += f"* @brief++++++++++ Function to set {signal['comment']} in range {signal['range']}\n"
-            if 'values' in signal and signal['values'] == 'status':
-                str += f"* @brief Function to set {signal['comment']} to either of these valid statuses [""ERROR"",""WARNING"",""OKAY""]\n"
-            if 'values' in signal and signal['values'] == 'states':
-                str += f"* @brief******** Function to set {signal['comment']} to either of these valid states [""ON"",""OFF""]\n"
-                str += f"* @param value\n"
-                str += "*\n"
-                str += f"* @return true\n"
-                str += f"* @return false\n"
-                str += "*/\n"
-                str += f"bool {stem}_set_{signal['name']}({signal['type']} value);\n"
-                str += "\n" """
-
-# print(str)
+    texten = json_data['messages'][x]['signals']
+    if signals == 'com':
+        print("ACT lika med signals. X är lika med ", x)
+        # print(texten)
+        for signal in texten:
+            str += f"{signal['name']}      {signal['type']}          {signal['comment']}            \n"
+            print(str)
