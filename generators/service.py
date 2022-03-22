@@ -8,8 +8,8 @@ def get_content(node, mode, messages):
     text += generate_messages(messages)
     text += generate_can_signal_read()
     text += generate_can_signal_write()
-    text += generate_can_service_init()
-    text += generate_can_service_run()
+    text += generate_can_service_init(mode)
+    text += generate_can_service_run(mode)
     return text
 
 def generate_head():
@@ -119,16 +119,18 @@ def generate_can_signal_write():
         }}
     ''')
 
-def generate_can_service_init():
-    return dedent(f'''
-        void can_service_init(void)
-        {{
-        }}
-    ''')
+def generate_can_service_init(mode):
+    if mode == "dev":
+        return dedent(f'''
+            void can_service_init(void)
+            {{
+            }}
+        ''')
 
-def generate_can_service_run():
-    return dedent(f'''
-        void can_service_run(void)
-        {{
-        }}
-    ''')
+def generate_can_service_run(mode):
+    if mode == "dev":
+        return dedent(f'''
+            void can_service_run(void)
+            {{
+            }}
+        ''')
