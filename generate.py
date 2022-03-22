@@ -93,17 +93,12 @@ for message in data['messages']:
                 break
 del data['messages']
 
-values = []
-
-for message in messages:
-    for signal in message['signals']:
-        if 'values' in signal:
-            signal['values'] = defines[signal['values']]
-            if signal['values'] not in values:
-                values.append(signal['values'])
-
 write_file(Path(TEENSY_CANBUS_DIR, 'can_service.cpp'),
            service.get_content(node, mode, messages[:]))
 
 write_file(Path(TEENSY_INCLUDE_DIR, 'common.h'),
-           common.get_common_header(values[:]))
+           common.get_teensy_common_header(node, messages[:]))
+
+if ESP32_INCLUDE_DIR != None:
+    write_file(Path(ESP32_INCLUDE_DIR, 'common.h'),
+               common.get_esp32_common_header(defines))

@@ -1,18 +1,10 @@
-def get_common_header(values):
-    macros = ''
-    name_list = []
+def get_teensy_common_header(node, messages):
+    content = ''
 
-    for value in values:
-        for index, name in enumerate(value):
-            if name not in name_list:
-                name_list.append(name)
-                macros += f"#define {name} {index}\n"
+    return content
 
-    header_content = f"""\
-#ifndef COMMON_H
-#define COMMON_H
-    
-{macros}
-#endif /* COMMON_H */"""
 
-    return header_content
+def get_esp32_common_header(defines):
+    content = ''
+
+    return content
