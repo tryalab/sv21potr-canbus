@@ -4,15 +4,14 @@ from inspect import getgeneratorlocals
 def set_test_double_function(name, type, low_boundary, high_boundary, if_float_multiply, index, start, length):
     text = \
         f"""
-bool canbus_set_test_{name}({type} value)
+bool canbus_test_set_{name}({type} value)
 {{
     bool status = false;
 
     if ({low_boundary} <= value && value <= {high_boundary})
     {{\
         {if_float_multiply}
-        can_signal_write({index}, {start},
-                         {length}, value);
+        can_signal_write({index}, {start}, {length}, value);
         status = true;
     }}
 
@@ -32,8 +31,7 @@ bool canbus_set_{name}({type} value)
     if ({low_boundary} <= value && value <= {high_boundary})
     {{\
         {if_float_multiply}
-        can_signal_write({index}, {start},
-                         {length}, value);
+        can_signal_write({index}, {start}, {length}, value);
         status = true;
     }}
 
@@ -46,7 +44,7 @@ bool canbus_set_{name}({type} value)
 def get_test_double_function(name, type, if_float_devide, index, start, length):
     text = \
         f"""
-{type} canbus_get_test_{name}(void)
+{type} canbus_test_get_{name}(void)
 {{
     {type} value = 0;
     value = ({type})can_signal_read({index}, {start}, {length});\
@@ -176,7 +174,7 @@ def set_test_double_header(comment, name, type):
  * @param value The value to set.
  * @return true if value is valid otherwise return false.
  */
-bool canbus_set_test_{name}({type} value);
+bool canbus_test_set_{name}({type} value);
               """
     return text
 
@@ -201,7 +199,7 @@ def get_test_double_header(comment, name, type):
  * @brief This function is used as test double to get {comment}.
  * @return {name} The extracted data.
  */
-{type} canbus_get_test_{name}(void);
+{type} canbus_test_get_{name}(void);
               """
     return text
 
