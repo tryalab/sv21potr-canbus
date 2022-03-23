@@ -138,10 +138,6 @@ def get_canbus_source(node, mode, messages):
                         get += get_test_double_function(
                             signal.get("name"), signal.get("type"), if_float_devide, index, signal.get("start"), signal.get("length"))
 
-                    elif mode == 'prod':
-                        get += get_function(signal.get("name"), signal.get("type"),
-                                            if_float_devide, index, signal.get("start"), signal.get("length"))
-
                 elif message['setter'] != node and node in signal['getters']:
                     get += get_function(signal.get("name"), signal.get("type"),
                                         if_float_devide, index, signal.get("start"), signal.get("length"))
@@ -149,10 +145,6 @@ def get_canbus_source(node, mode, messages):
                     if mode == 'dev':
                         set += set_test_double_function(signal.get("name"), signal.get("type"), low_boundary,
                                                         high_boundary, if_float_multiply, index, signal.get("start"), signal.get("length"))
-
-                    elif mode == 'prod':
-                        set += set_function(signal.get("name"), signal.get("type"), low_boundary,
-                                            high_boundary, if_float_multiply, index, signal.get("start"), signal.get("length"))
 
                 if node in signal['getters']:
                     if 'update' in signal:
@@ -189,7 +181,7 @@ bool canbus_set_test_{name}({type} value);
     return text
 
 
-def set_test_header(comment, name, type):
+def set_header(comment, name, type):
     text = \
         f"""
 /**
@@ -214,7 +206,7 @@ def get_test_double_header(comment, name, type):
     return text
 
 
-def get_test_header(comment, name, type):
+def get_header(comment, name, type):
     text = \
         f"""
 /**
@@ -241,7 +233,7 @@ bool canbus_is_{name}_updated(void);
 def control_header(comment, name):
     text = \
         f"""
-/**             
+/**
  * @brief This function is used to check if {comment} is enabled.
  * @return true if signal is enabled.
  */
@@ -271,35 +263,39 @@ def get_canbus_header(node, mode, messages):
     for message in messages:
         for signal in message["signals"]:
             if message['setter'] == node or node in signal['getters']:
-                if message['setter'] == node:
-                    if message['setter'] not in signal['getters'] and mode == "dev":
 
-                        set += set_test_double_header(signal.get(
+                if message['setter'] == node and node in signal['getters']:
+                    set += set_header(signal.get(
+                        "comment"), signal.get("name"), signal.get("type"))
+                    get += get_header(signal.get(
+                        "comment"), signal.get("name"), signal.get("type"))
+
+                elif message['setter'] == node and node not in signal['getters']:
+                    set += set_header(signal.get(
+                        "comment"), signal.get("name"), signal.get("type"))
+
+                    if mode == 'dev':
+                        get += get_test_double_header(signal.get(
                             "comment"), signal.get("name"), signal.get("type"))
-                    else:
-                        set += set_test_header(signal.get(
+
+                elif message['setter'] != node and node in signal['getters']:
+                    get += get_header(signal.get(
+                        "comment"), signal.get("name"), signal.get("type"))
+
+                    if mode == 'dev':
+                        set += set_test_double_header(signal.get(
                             "comment"), signal.get("name"), signal.get("type"))
 
                 if node in signal['getters']:
-                    if message['setter'] not in signal['getters'] and mode == "dev":
-
-                        get += get_test_double_header(signal.get(
-                            "comment"), signal.get("name"), signal.get("type"))
-                    else:
-                        get += get_test_header(signal.get(
-                            "comment"), signal.get("name"), signal.get("type"))
-
-                if 'update' in signal:
-                    control_bit += update_header(
-                        signal.get("comment"), signal.get("name"))
-
-                if 'control' in signal:
-                    control_bit += control_header(
-                        signal.get("comment"), signal.get("name"))
-
-                if 'calibration' in signal:
-                    control_bit += calibration_header(
-                        signal.get("comment"), signal.get("name"))
+                    if 'update' in signal:
+                        control_bit += update_header(
+                            signal.get("comment"), signal.get("name"))
+                    elif 'control' in signal:
+                        control_bit += control_header(
+                            signal.get("comment"), signal.get("name"))
+                    elif 'calibration' in signal:
+                        control_bit += calibration_header(
+                            signal.get("comment"), signal.get("name"))
 
     text = f"""\
 # ifndef CANBUS_H
