@@ -1,14 +1,12 @@
-from inspect import getgeneratorlocals
 
-
-def set_test_double_function(name, type, low_boundary, high_boundary, if_float_multiply, index, start, length):
+def set_test_double_function(name, type, valid, if_float_multiply, index, start, length):
     text = \
         f"""
 bool canbus_test_set_{name}({type} value)
 {{
     bool status = false;
 
-    if ({low_boundary} <= value && value <= {high_boundary})
+    if ({valid})
     {{\
         {if_float_multiply}
         can_signal_write({index}, {start}, {length}, value);
@@ -21,14 +19,14 @@ bool canbus_test_set_{name}({type} value)
     return text
 
 
-def set_function(name, type, low_boundary, high_boundary, if_float_multiply, index, start, length):
+def set_function(name, type, valid, if_float_multiply, index, start, length):
     text = \
         f"""
 bool canbus_set_{name}({type} value)
 {{
     bool status = false;
 
-    if ({low_boundary} <= value && value <= {high_boundary})
+    if ({valid})
     {{\
         {if_float_multiply}
         can_signal_write({index}, {start}, {length}, value);
@@ -69,11 +67,21 @@ def get_function(name, type, if_float_devide, index, start, length):
     return text
 
 
-def update_function(name):
+def update_function(name, type, get_update):
     text = \
         f"""
 bool canbus_is_{name}_updated(void)
 {{
+    bool status = false;
+    {type} previous_value = 0;
+
+    if(previous_value != {get_update})
+    {{
+        previous_value = {get_update};
+        status = true;
+    }}
+
+    return status;
 }}
               """
     return text
@@ -84,16 +92,18 @@ def control_function(name):
         f"""
 bool canbus_is_{name}_enabled(void)
 {{
+
 }}
               """
     return text
 
 
-def calibration_function(name):
+def calibration_function(name, type, set_valid):
     text = \
         f"""
-bool canbus_is_{name}_valid(void)
+bool canbus_is_{name}_valid({type} value)
 {{
+    return {set_valid};
 }}
               """
     return text
@@ -108,10 +118,9 @@ def get_canbus_source(node, mode, messages):
         for signal in message["signals"]:
             if message['setter'] == node or node in signal['getters']:
                 if "range" in signal:
-                    low_boundary = str(signal.get("range")[0])
+                    low_boundary = str(signal["range"][0])
                     high_boundary = str(signal["range"][-1])
                 elif "values" in signal:
-                    low_boundary = signal["values"][0]
                     high_boundary = signal["values"][-1]
                 if signal.get("type") == "float":
                     if_float_multiply = '''\n\t\tvalue *= 10;'''
@@ -120,17 +129,26 @@ def get_canbus_source(node, mode, messages):
                     if_float_multiply = ""
                     if_float_devide = ""
 
+                valid = ''
+                if 'range' in signal:
+                    if signal["range"][0] != 0:
+                        valid = f"""{low_boundary} <= value && value <= {high_boundary}"""
+                    else:
+                        valid = f"""value <= {high_boundary}"""
+                else:
+                    valid = f"""value <= {high_boundary}"""
+
                 if message['setter'] == node and node in signal['getters']:
 
-                    set += set_function(signal.get("name"), signal.get("type"), low_boundary,
-                                        high_boundary, if_float_multiply, index, signal.get("start"), signal.get("length"))
+                    set += set_function(signal.get("name"), signal.get("type"), valid,
+                                        if_float_multiply, index, signal.get("start"), signal.get("length"))
 
                     get += get_function(signal.get("name"), signal.get("type"),
                                         if_float_devide, index, signal.get("start"), signal.get("length"))
 
                 elif message['setter'] == node and node not in signal['getters']:
-                    set += set_function(signal.get("name"), signal.get("type"), low_boundary,
-                                        high_boundary, if_float_multiply, index, signal.get("start"), signal.get("length"))
+                    set += set_function(signal.get("name"), signal.get("type"), valid,
+                                        if_float_multiply, index, signal.get("start"), signal.get("length"))
 
                     if mode == 'dev':
                         get += get_test_double_function(
@@ -141,18 +159,27 @@ def get_canbus_source(node, mode, messages):
                                         if_float_devide, index, signal.get("start"), signal.get("length"))
 
                     if mode == 'dev':
-                        set += set_test_double_function(signal.get("name"), signal.get("type"), low_boundary,
-                                                        high_boundary, if_float_multiply, index, signal.get("start"), signal.get("length"))
+                        set += set_test_double_function(signal.get("name"), signal.get(
+                            "type"), valid, if_float_multiply, index, signal.get("start"), signal.get("length"))
 
                 if node in signal['getters']:
                     if 'update' in signal:
-                        control_bit += update_function(signal.get("name"))
+                        get_update = f"""canbus_get_{signal.get("name")}()"""
+                        control_bit += update_function(
+                            signal.get("name"), signal.get("type"), get_update)
 
                     elif 'control' in signal:
-                        control_bit += control_function(signal.get("name"))
+                        control_bit += control_function(
+                            signal.get("name"))
 
                     elif 'calibration' in signal:
-                        control_bit += calibration_function(signal.get("name"))
+                        if mode == 'dev':
+                            set_valid = f"""canbus_test_set_{signal.get("name")}(value)"""
+                        elif mode == 'prod':
+                            set_valid = f"""canbus_set_{signal.get("name")}(value)"""
+
+                        control_bit += calibration_function(
+                            signal.get("name"), signal.get("type"), set_valid)
 
     text = f'''\
 # include "canbus.h"
