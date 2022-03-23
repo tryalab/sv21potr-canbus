@@ -22,7 +22,7 @@ bool canbus_set_test_{name}({type} value)
     return text
 
 
-def set_test_function(name, type, low_boundary, high_boundary, if_float_multiply, index, start, length):
+def set_function(name, type, low_boundary, high_boundary, if_float_multiply, index, start, length):
     text = \
         f"""
 bool canbus_set_{name}({type} value)
@@ -57,7 +57,7 @@ def get_test_double_function(name, type, if_float_devide, index, start, length):
     return text
 
 
-def get_test_function(name, type, if_float_devide, index, start, length):
+def get_function(name, type, if_float_devide, index, start, length):
     text = \
         f"""
 {type} canbus_get_{name}(void)
@@ -122,31 +122,47 @@ def get_canbus_source(node, mode, messages):
                     if_float_multiply = ""
                     if_float_devide = ""
 
-                if message['setter'] == node:
-                    if message['setter'] not in signal['getters'] and mode == "dev":
-                        set += set_test_double_function(signal.get("name"), signal.get("type"), low_boundary,
-                                                        high_boundary, if_float_multiply, index, signal.get("start"), signal.get("length"))
-                    else:
-                        set += set_test_function(signal.get("name"), signal.get("type"), low_boundary,
-                                                 high_boundary, if_float_multiply, index, signal.get("start"), signal.get("length"))
+                if message['setter'] == node and node in signal['getters']:
 
-                if node in signal['getters']:
-                    if message['setter'] not in signal['getters'] and mode == "dev":
+                    set += set_function(signal.get("name"), signal.get("type"), low_boundary,
+                                        high_boundary, if_float_multiply, index, signal.get("start"), signal.get("length"))
 
+                    get += get_function(signal.get("name"), signal.get("type"),
+                                        if_float_devide, index, signal.get("start"), signal.get("length"))
+
+                elif message['setter'] == node and node not in signal['getters']:
+                    set += set_function(signal.get("name"), signal.get("type"), low_boundary,
+                                        high_boundary, if_float_multiply, index, signal.get("start"), signal.get("length"))
+
+                    if mode == 'dev':
                         get += get_test_double_function(
                             signal.get("name"), signal.get("type"), if_float_devide, index, signal.get("start"), signal.get("length"))
-                    else:
-                        get += get_test_function(signal.get("name"), signal.get("type"),
-                                                 if_float_devide, index, signal.get("start"), signal.get("length"))
 
-                if 'update' in signal:
-                    control_bit += update_function(signal.get("name"))
+                    elif mode == 'prod':
+                        get += get_function(signal.get("name"), signal.get("type"),
+                                            if_float_devide, index, signal.get("start"), signal.get("length"))
 
-                if 'control' in signal:
-                    control_bit += control_function(signal.get("name"))
+                elif message['setter'] != node and node in signal['getters']:
+                    get += get_function(signal.get("name"), signal.get("type"),
+                                        if_float_devide, index, signal.get("start"), signal.get("length"))
 
-                if 'calibration' in signal:
-                    control_bit += calibration_function(signal.get("name"))
+                    if mode == 'dev':
+                        set += set_test_double_function(signal.get("name"), signal.get("type"), low_boundary,
+                                                        high_boundary, if_float_multiply, index, signal.get("start"), signal.get("length"))
+
+                    elif mode == 'prod':
+                        set += set_function(signal.get("name"), signal.get("type"), low_boundary,
+                                            high_boundary, if_float_multiply, index, signal.get("start"), signal.get("length"))
+
+                if node in signal['getters']:
+                    if 'update' in signal:
+                        control_bit += update_function(signal.get("name"))
+
+                    elif 'control' in signal:
+                        control_bit += control_function(signal.get("name"))
+
+                    elif 'calibration' in signal:
+                        control_bit += calibration_function(signal.get("name"))
 
     text = f'''\
 # include "canbus.h"
