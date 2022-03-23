@@ -4,7 +4,8 @@ from textwrap import dedent
 BYTE_BITS:int = 8
 
 def get_content(node, mode, messages):
-    text = generate_head()
+    text = ""
+    text += generate_head(mode)
     text += generate_messages(messages)
     text += generate_can_signal_read()
     text += generate_can_signal_write()
@@ -12,28 +13,38 @@ def get_content(node, mode, messages):
     text += generate_can_service_run(mode)
     return text
 
-def generate_head():
-    return dedent(f'''
-        #include "can_signal.h"
-        #include "can_service.h"
+def generate_head(mode):
+    text = ""
+    if mode == "dev":
+        text = dedent(f'''
+            #include "can_signal.h"
+            #include "can_service.h"
 
-        #define BYTE_BITS (8U)
+            #define BYTE_BITS (8U)
 
-        typedef struct
-        {{
-            uint32_t id;		// can identifier
-            uint16_t timestamp; // FlexCAN time when message arrived
-            struct
+            typedef struct
             {{
-                uint8_t extended : 1; // identifier is extended (29-bit)
-                uint8_t remote : 1;	  // remote transmission request packet type
-                uint8_t overrun : 1;  // message overrun
-                uint8_t reserved : 5;
-            }} flags;
-            uint8_t len; // length of data
-            uint8_t buf[8];
-        }} CAN_message_t;
-    ''')
+                uint32_t id;		// can identifier
+                uint16_t timestamp; // FlexCAN time when message arrived
+                struct
+                {{
+                    uint8_t extended : 1; // identifier is extended (29-bit)
+                    uint8_t remote : 1;	  // remote transmission request packet type
+                    uint8_t overrun : 1;  // message overrun
+                    uint8_t reserved : 5;
+                }} flags;
+                uint8_t len; // length of data
+                uint8_t buf[8];
+            }} CAN_message_t;
+        ''')
+    else:
+        text = dedent(f'''
+            #include "FlexCAN.h"
+            #include "can_service.h"
+
+            #define BYTE_BITS (8U)
+        ''')
+    return text
 
 def generate_messages(messages):
     can_messages = ""
@@ -120,7 +131,7 @@ def generate_can_signal_write():
     ''')
 
 def generate_can_service_init(mode):
-    if mode == "dev":
+    #if mode == "dev":
         return dedent(f'''
             void can_service_init(void)
             {{
@@ -128,7 +139,7 @@ def generate_can_service_init(mode):
         ''')
 
 def generate_can_service_run(mode):
-    if mode == "dev":
+    #if mode == "dev":
         return dedent(f'''
             void can_service_run(void)
             {{
