@@ -103,9 +103,14 @@ for message in messages:
 write_file(Path(TEENSY_CANBUS_DIR, 'can_service.cpp'),
            service.get_content(node, mode, messages[:]))
 
+write_file(Path(TEENSY_CANBUS_DIR, 'canbus.h'),
+           canbus.get_canbus_header(node, mode, messages[:]))
+
+write_file(Path(TEENSY_CANBUS_DIR, 'canbus.cpp'),
+           canbus.get_canbus_source(node, mode, messages[:]))
+
 write_file(Path(TEENSY_INCLUDE_DIR, 'common.h'),
            common.get_teensy_common_header(node, messages[:]))
-
 
 if ESP32_INCLUDE_DIR != None:
     write_file(Path(ESP32_INCLUDE_DIR, 'common.h'),
