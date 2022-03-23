@@ -3,6 +3,9 @@ def get_teensy_common_header(node, messages):
     values = []
     name_list = []
 
+    if node == "sns":
+        macros += "#define ADC_RESOLUTION 10\n"
+
     for message in messages:
         for signal in message['signals']:
             if message['setter'] == node or node in signal['getters']:
@@ -17,7 +20,7 @@ def get_teensy_common_header(node, messages):
         header_content = f"""\
 #ifndef COMMON_H
 #define COMMON_H
-    
+   
 {macros}
 #endif /* COMMON_H */"""
 
