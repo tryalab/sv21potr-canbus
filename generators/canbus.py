@@ -1,8 +1,8 @@
 
-def set_test_double_function(name, type, valid, if_float_multiply, index, start, length):
+def set_function(prototype, valid, if_float_multiply, index, start, length):
     text = \
         f"""
-bool canbus_test_set_{name}({type} value)
+{prototype}
 {{
     bool status = false;
 
@@ -19,49 +19,12 @@ bool canbus_test_set_{name}({type} value)
     return text
 
 
-def set_function(name, type, valid, if_float_multiply, index, start, length):
+def get_function(prototype, type, if_float_devide, index, start, length):
     text = \
         f"""
-bool canbus_set_{name}({type} value)
+{prototype}
 {{
-    bool status = false;
-
-    if ({valid})
-    {{\
-        {if_float_multiply}
-        can_signal_write({index}, {start}, {length}, (uint64_t)value);
-        status = true;
-    }}
-
-    return status;
-}}
-              """
-    return text
-
-
-def get_test_double_function(name, type, if_float_devide, index, start, length):
-    text = \
-        f"""
-{type} canbus_test_get_{name}(void)
-{{
-    {type} value = 0;
-    value = ({type})can_signal_read({index}, {start}, {length});\
-    {if_float_devide}
-    return value;
-}}
-              """
-    return text
-
-
-def get_function(name, type, if_float_devide, index, start, length):
-    text = \
-        f"""
-{type} canbus_get_{name}(void)
-{{
-    {type} value = 0;
-    value = ({type})can_signal_read({index}, {start}, {length});\
-    {if_float_devide}
-    return value;
+    return ({type})can_signal_read({index}, {start}, {length}){if_float_devide};
 }}
               """
     return text
@@ -110,13 +73,96 @@ bool canbus_is_{name}_valid(void)
     return text
 
 
+def set_min_function(prototype_set, prototype_get, valid, if_float_multiply, index, start, length):
+
+    text = \
+        f"""
+{prototype_set}
+{{
+    bool status = false;
+
+    if ({valid})
+    {{
+        uint8_t max_value = {prototype_get[prototype_get.find('canbus'):prototype_get.find('min')] + "max"}();
+
+        if (max_value >= value)
+        {{\
+            {if_float_multiply}
+            can_signal_write({index}, {start}, {length}, (uint64_t)value);
+            can_signal_write({index}, {start + length}, 1, 1);
+            status = true;
+        }}
+    }}
+
+    return status;
+}}
+              """
+    return text
+
+
+def set_only_min_or_max_function(prototype_set, valid, if_float_multiply, index, start, length):
+
+    text = \
+        f"""
+{prototype_set}
+{{
+    bool status = false;
+
+    if ({valid})
+    {{\
+        {if_float_multiply}
+        can_signal_write({index}, {start}, {length}, (uint64_t)value);
+        can_signal_write({index}, {start + length}, 1, 1);
+        status = true;
+    }}
+
+    return status;
+}}
+              """
+    return text
+
+
+def set_max_function(prototype_set, prototype_get, valid, if_float_multiply, index, start, length):
+    text = \
+        f"""
+{prototype_set}
+{{
+    bool status = false;
+
+    if ({valid})
+    {{
+        uint8_t min_value = {prototype_get[prototype_get.find('canbus'):prototype_get.find('max')] + "min"}();
+
+        if (min_value <= value)
+        {{\
+            {if_float_multiply}
+            can_signal_write({index}, {start}, {length}, (uint64_t)value);
+            can_signal_write({index}, {start + length}, 1, 1);
+            status = true;
+        }}
+    }}
+
+    return status;
+}}
+              """
+    return text
+
+
 def get_canbus_source(node, mode, messages):
     get = ''
     set = ''
     control_bit = ''
 
+    #list_min_max = []
+    # for index, message in enumerate(messages):
+    #    for signal in message["signals"]:
+    #        if 'calibration' in signal:
+    #            list_min_max.append(signal.get('name'))
+
+    # print(list_min_max)
+
     for index, message in enumerate(messages):
-        for signal in message["signals"]:
+        for signal_index, signal in enumerate(message["signals"]):
 
             name = signal.get("name")
             type = signal.get("type")
@@ -131,7 +177,7 @@ def get_canbus_source(node, mode, messages):
                     high_boundary = signal["values"][-1]
                 if type == "float":
                     if_float_multiply = '''\n\t\tvalue *= 10;'''
-                    if_float_devide = "\n\tvalue /= 10;"
+                    if_float_devide = " / 10"
                 else:
                     if_float_multiply = ""
                     if_float_devide = ""
@@ -152,28 +198,55 @@ def get_canbus_source(node, mode, messages):
 
                 # generate setters and getters function
                 if message['setter'] == node and node in signal['getters']:
-
-                    set += set_function(name, type, valid,
-                                        if_float_multiply, index, start, length)
-
-                    get += get_function(name, type,
-                                        if_float_devide, index, start, length)
+                    prototype_set = f"""bool canbus_set_{name}({type} value)"""
+                    prototype_get = f"""{type} canbus_get_{name}(void)"""
 
                 elif message['setter'] == node and node not in signal['getters']:
-                    set += set_function(name, type, valid,
-                                        if_float_multiply, index, start, length)
-
+                    prototype_set = f"""bool canbus_set_{name}({type} value)"""
+                    prototype_get = ''
                     if mode == 'dev':
-                        get += get_test_double_function(
-                            name, type, if_float_devide, index, start, length)
+                        prototype_get = f"""{type} canbus_test_get_{name}(void)"""
 
                 elif message['setter'] != node and node in signal['getters']:
-                    get += get_function(name, type,
-                                        if_float_devide, index, start, length)
-
+                    prototype_set = ''
+                    prototype_get = f"""{type} canbus_get_{name}(void)"""
                     if mode == 'dev':
-                        set += set_test_double_function(
-                            name, type, valid, if_float_multiply, index, start, length)
+                        prototype_set = f"""bool canbus_test_set_{name}({type} value)"""
+
+                if prototype_set != '':
+                    if 'calibration' in signal:
+
+                        previous_name = message["signals"][signal_index-1]['name']
+                        next_name = ''
+                        if message["signals"][-1]['name'] != name:
+                            next_name = message["signals"][signal_index + 1]['name']
+
+                        if name.find('min') != -1:
+                            if previous_name.find('max') != -1:
+                                previous_name = previous_name.replace(previous_name[len(previous_name) - 3:], "min")
+                            if next_name.find('max') != -1:
+                                next_name = next_name.replace(next_name[len(next_name) - 3:], "min")
+
+                            if name == previous_name or name == next_name:
+                                set += set_min_function(prototype_set, prototype_get, valid, if_float_multiply, index, start, length)
+                            else:
+                                set += set_only_min_or_max_function(prototype_set, valid, if_float_multiply, index, start, length)
+
+                        if name.find('max') != -1:
+                            if previous_name.find('min') != -1:
+                                previous_name = previous_name.replace(previous_name[len(previous_name) - 3:], "max")
+                            if next_name.find('min') != -1:
+                                next_name = next_name.replace(next_name[len(next_name) - 3:], "max")
+
+                            if name == previous_name or name == next_name:
+                                set += set_max_function(prototype_set, prototype_get, valid, if_float_multiply, index, start, length)
+                            else:
+                                set += set_only_min_or_max_function(prototype_set, valid, if_float_multiply, index, start, length)
+                    else:
+                        set += set_function(prototype_set, valid, if_float_multiply, index, start, length)
+
+                if prototype_get != '':
+                    get += get_function(prototype_get, type, if_float_devide, index, start, length)
 
                 # add functions for update, control and calibration (_updated, _enabled, _valid)
                 control_bit_position = start + length - 1
@@ -300,8 +373,6 @@ def get_canbus_header(node, mode, messages):
 
             name = signal.get("name")
             type = signal.get("type")
-            start = signal.get("start")
-            length = signal.get("length")
             comment = signal.get("comment")
 
             if message['setter'] == node or node in signal['getters']:
