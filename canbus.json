@@ -58,7 +58,7 @@
             ]
         },
         {
-            "id":"0x103",
+            "id":"0x102",
             "setter":"act",
             "signals":[
                 {"name":"heater_state",         "type":"uint8_t", "start": 0,   "length": 1, "values": "states", "getters": ["hmi", "com"], "comment": "heater state"},
@@ -77,7 +77,7 @@
             ]
         },
         {
-            "id":"0x104",
+            "id":"0x103",
             "setter":"hmi",
             "signals":[
                 {"name":"water_valve_manual_state", "control": true,     "type": "uint8_t", "start": 0,  "length": 2, "values":"vlvwin", "getters": ["com", "act"], "comment":"control state of the water valve manually"},
@@ -100,7 +100,7 @@
             ]
         },
         {
-            "id":"0x105",
+            "id":"0x104",
             "setter":"hmi",
             "signals":[
                 {"name":"temperature_target_min",     "calibration": true, "type": "uint8_t", "start": 0,  "length": 7, "range": [0, 50],  "getters": ["com", "act"], "comment":"min. target temperature"},
@@ -114,7 +114,7 @@
             ]
         },
         {
-            "id":"0x106",
+            "id":"0x105",
             "setter":"hmi",
             "signals":[
                 {"name":"water_level_target_min",    "calibration": true, "type": "uint8_t",  "start": 0,  "length": 8,  "range": [0, 100],    "getters": ["com", "act"], "comment":"min. target water level"},
