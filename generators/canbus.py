@@ -182,7 +182,7 @@ def get_canbus_source(node, mode, messages):
 
                     # if negative value in range use convert function
                     if signal['range'][0] < 0:
-                        return_text = f"return ({type})convert_if_negative(can_signal_read({index}, {start}, {length})){if_float_devide};"
+                        return_text = f"return ({type})convert_if_negative(can_signal_read({index}, {start}, {length}), {length}){if_float_devide};"
                     else:
                         return_text = f"return ({type})can_signal_read({index}, {start}, {length}){if_float_devide};"
                 else:
