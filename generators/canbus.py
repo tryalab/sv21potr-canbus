@@ -152,14 +152,6 @@ def get_canbus_source(node, mode, messages):
     set = ''
     control_bit = ''
 
-    #list_min_max = []
-    # for index, message in enumerate(messages):
-    #    for signal in message["signals"]:
-    #        if 'calibration' in signal:
-    #            list_min_max.append(signal.get('name'))
-
-    # print(list_min_max)
-
     for index, message in enumerate(messages):
         for signal_index, signal in enumerate(message['signals']):
 
@@ -177,33 +169,32 @@ def get_canbus_source(node, mode, messages):
                     if_float_multiply = ""
                     if_float_devide = ""
 
+                valid = ''
+                # decide the value range for validity
                 if 'range' in signal:
-                    if signal['range'][0] < 0.0:
-                        return_text = f"return ({type})convert_if_negative(can_signal_read({index}, {start}, {length})){if_float_devide};"
-                    else:
-                        return_text = f"return ({type})can_signal_read({index}, {start}, {length}){if_float_devide};"
-                    
                     low_boundary = str(signal['range'][0])
                     high_boundary = str(signal['range'][-1])
-
-                elif "values" in signal:
-                    high_boundary = signal['values'][-1]
-
-                # decide the value range for validity
-                valid = ''
-                if 'range' in signal:
+                    
                     if signal['range'][0] != 0:
                         valid = f"{low_boundary} <= value && value <= {high_boundary}"
                     else:
                         valid = f"value <= {high_boundary}"
+
+                    # if negative value in range use convert function
+                    if signal['range'][0] < 0:
+                        return_text = f"return ({type})convert_if_negative(can_signal_read({index}, {start}, {length})){if_float_devide};"
+                    else:
+                        return_text = f"return ({type})can_signal_read({index}, {start}, {length}){if_float_devide};"
                 else:
+                    high_boundary = signal['values'][-1]
                     valid = f"value <= {high_boundary}"
+                    
 
                 # to remove control bit from message
                 if 'update' in signal or 'control' in signal or 'calibration' in signal:
                     length -= 1
 
-                # generate setters and getters function
+                # setters and getters function names
                 if message['setter'] == node and node in signal['getters']:
                     prototype_set = f"bool canbus_set_{name}({type} value)"
                     prototype_get = f"{type} canbus_get_{name}(void)"
@@ -220,6 +211,7 @@ def get_canbus_source(node, mode, messages):
                     if mode == 'dev':
                         prototype_set = f"bool canbus_test_set_{name}({type} value)"
 
+                # generate setters functions
                 if prototype_set != '':
                     if 'calibration' in signal:
 
@@ -251,11 +243,12 @@ def get_canbus_source(node, mode, messages):
                                 set += set_only_min_or_max_function(prototype_set, valid, if_float_multiply, index, start, length)
                     else:
                         set += set_function(prototype_set, valid, if_float_multiply, index, start, length)
-
+                
+                # generate getters functions
                 if prototype_get != '': 
                         get += get_function(prototype_get, return_text)
 
-                # add functions for update, control and calibration (_updated, _enabled, _valid)
+                # generate functions for update, control and calibration (_updated, _enabled, _valid)
                 control_bit_position = start + length - 1
                 control_bit_function = f"can_signal_read({index}, {control_bit_position}, 1)"
                 if node in signal['getters']:
