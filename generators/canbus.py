@@ -19,16 +19,15 @@ def set_function(prototype, valid, if_float_multiply, index, start, length):
     return text
 
 
-def get_function(prototype, type, if_float_devide, index, start, length):
+def get_function(prototype, return_line):
     text = \
         f"""
 {prototype}
 {{
-    return ({type})can_signal_read({index}, {start}, {length}){if_float_devide};
+    {return_line}
 }}
               """
     return text
-
 
 def update_function(name, control_bit_function):
     text = \
@@ -170,17 +169,25 @@ def get_canbus_source(node, mode, messages):
             length = signal.get("length")
 
             if message['setter'] == node or node in signal['getters']:
-                if "range" in signal:
-                    low_boundary = str(signal["range"][0])
-                    high_boundary = str(signal["range"][-1])
-                elif "values" in signal:
-                    high_boundary = signal["values"][-1]
+                
                 if type == "float":
                     if_float_multiply = '''\n\t\tvalue *= 10;'''
                     if_float_devide = " / 10"
                 else:
                     if_float_multiply = ""
                     if_float_devide = ""
+
+                if "range" in signal:
+                    if signal["range"][0] < 0.0:
+                        return_text = f"return ({type})convert_if_negative(can_signal_read({index}, {start}, {length})){if_float_devide};"
+                    else:
+                        return_text = f"return ({type})can_signal_read({index}, {start}, {length}){if_float_devide};"
+                    
+                    low_boundary = str(signal["range"][0])
+                    high_boundary = str(signal["range"][-1])
+
+                elif "values" in signal:
+                    high_boundary = signal["values"][-1]
 
                 # decide the value range for validity
                 valid = ''
@@ -245,29 +252,36 @@ def get_canbus_source(node, mode, messages):
                     else:
                         set += set_function(prototype_set, valid, if_float_multiply, index, start, length)
 
-                if prototype_get != '':
-                    get += get_function(prototype_get, type, if_float_devide, index, start, length)
+                if prototype_get != '': 
+                        get += get_function(prototype_get, return_text)
 
                 # add functions for update, control and calibration (_updated, _enabled, _valid)
                 control_bit_position = start + length - 1
                 control_bit_function = f"""can_signal_read({index}, {control_bit_position}, 1)"""
                 if node in signal['getters']:
                     if 'update' in signal:
-                        control_bit += update_function(name,
-                                                       control_bit_function)
+                        control_bit += update_function(name, control_bit_function)
 
                     elif 'control' in signal:
-                        control_bit += control_function(name,
-                                                        control_bit_function)
+                        control_bit += control_function(name, control_bit_function)
 
                     elif 'calibration' in signal:
-                        control_bit += calibration_function(
-                            name, control_bit_function)
+                        control_bit += calibration_function(name, control_bit_function)
 
     text = f'''\
 # include "canbus.h"
 # include "can_signal.h"
 # include "common.h"
+
+static int64_t convert_if_negative(uint64_t value, uint8_t bit_length)
+{{
+    if (value & (1 << (bit_length - 1)))
+    {{
+        value = -((~value + 1) & (~0ull >> (64 - bit_length)));
+    }}
+
+    return (int64_t)value;
+}}
 
 {set}
 {get}
