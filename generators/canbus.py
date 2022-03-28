@@ -161,43 +161,43 @@ def get_canbus_source(node, mode, messages):
     # print(list_min_max)
 
     for index, message in enumerate(messages):
-        for signal_index, signal in enumerate(message["signals"]):
+        for signal_index, signal in enumerate(message['signals']):
 
-            name = signal.get("name")
-            type = signal.get("type")
-            start = signal.get("start")
-            length = signal.get("length")
+            name = signal.get('name')
+            type = signal.get('type')
+            start = signal.get('start')
+            length = signal.get('length')
 
             if message['setter'] == node or node in signal['getters']:
                 
-                if type == "float":
-                    if_float_multiply = '''\n\t\tvalue *= 10;'''
+                if type == 'float':
+                    if_float_multiply = "\n\t\tvalue *= 10;"
                     if_float_devide = " / 10"
                 else:
                     if_float_multiply = ""
                     if_float_devide = ""
 
-                if "range" in signal:
-                    if signal["range"][0] < 0.0:
+                if 'range' in signal:
+                    if signal['range'][0] < 0.0:
                         return_text = f"return ({type})convert_if_negative(can_signal_read({index}, {start}, {length})){if_float_devide};"
                     else:
                         return_text = f"return ({type})can_signal_read({index}, {start}, {length}){if_float_devide};"
                     
-                    low_boundary = str(signal["range"][0])
-                    high_boundary = str(signal["range"][-1])
+                    low_boundary = str(signal['range'][0])
+                    high_boundary = str(signal['range'][-1])
 
                 elif "values" in signal:
-                    high_boundary = signal["values"][-1]
+                    high_boundary = signal['values'][-1]
 
                 # decide the value range for validity
                 valid = ''
                 if 'range' in signal:
-                    if signal["range"][0] != 0:
-                        valid = f"""{low_boundary} <= value && value <= {high_boundary}"""
+                    if signal['range'][0] != 0:
+                        valid = f"{low_boundary} <= value && value <= {high_boundary}"
                     else:
-                        valid = f"""value <= {high_boundary}"""
+                        valid = f"value <= {high_boundary}"
                 else:
-                    valid = f"""value <= {high_boundary}"""
+                    valid = f"value <= {high_boundary}"
 
                 # to remove control bit from message
                 if 'update' in signal or 'control' in signal or 'calibration' in signal:
@@ -205,34 +205,34 @@ def get_canbus_source(node, mode, messages):
 
                 # generate setters and getters function
                 if message['setter'] == node and node in signal['getters']:
-                    prototype_set = f"""bool canbus_set_{name}({type} value)"""
-                    prototype_get = f"""{type} canbus_get_{name}(void)"""
+                    prototype_set = f"bool canbus_set_{name}({type} value)"
+                    prototype_get = f"{type} canbus_get_{name}(void)"
 
                 elif message['setter'] == node and node not in signal['getters']:
-                    prototype_set = f"""bool canbus_set_{name}({type} value)"""
+                    prototype_set = f"bool canbus_set_{name}({type} value)"
                     prototype_get = ''
                     if mode == 'dev':
-                        prototype_get = f"""{type} canbus_test_get_{name}(void)"""
+                        prototype_get = f"{type} canbus_test_get_{name}(void)"
 
                 elif message['setter'] != node and node in signal['getters']:
                     prototype_set = ''
-                    prototype_get = f"""{type} canbus_get_{name}(void)"""
+                    prototype_get = f"{type} canbus_get_{name}(void)"
                     if mode == 'dev':
-                        prototype_set = f"""bool canbus_test_set_{name}({type} value)"""
+                        prototype_set = f"bool canbus_test_set_{name}({type} value)"
 
                 if prototype_set != '':
                     if 'calibration' in signal:
 
-                        previous_name = message["signals"][signal_index-1]['name']
+                        previous_name = message['signals'][signal_index - 1]['name']
                         next_name = ''
-                        if message["signals"][-1]['name'] != name:
-                            next_name = message["signals"][signal_index + 1]['name']
+                        if message['signals'][-1]['name'] != name:
+                            next_name = message['signals'][signal_index + 1]['name']
 
                         if name.find('min') != -1:
                             if previous_name.find('max') != -1:
-                                previous_name = previous_name.replace(previous_name[len(previous_name) - 3:], "min")
+                                previous_name = previous_name.replace(previous_name[len(previous_name) - 3:], 'min')
                             if next_name.find('max') != -1:
-                                next_name = next_name.replace(next_name[len(next_name) - 3:], "min")
+                                next_name = next_name.replace(next_name[len(next_name) - 3:], 'min')
 
                             if name == previous_name or name == next_name:
                                 set += set_min_function(prototype_set, prototype_get, valid, if_float_multiply, index, start, length)
@@ -241,9 +241,9 @@ def get_canbus_source(node, mode, messages):
 
                         if name.find('max') != -1:
                             if previous_name.find('min') != -1:
-                                previous_name = previous_name.replace(previous_name[len(previous_name) - 3:], "max")
+                                previous_name = previous_name.replace(previous_name[len(previous_name) - 3:], 'max')
                             if next_name.find('min') != -1:
-                                next_name = next_name.replace(next_name[len(next_name) - 3:], "max")
+                                next_name = next_name.replace(next_name[len(next_name) - 3:], 'max')
 
                             if name == previous_name or name == next_name:
                                 set += set_max_function(prototype_set, prototype_get, valid, if_float_multiply, index, start, length)
@@ -257,7 +257,7 @@ def get_canbus_source(node, mode, messages):
 
                 # add functions for update, control and calibration (_updated, _enabled, _valid)
                 control_bit_position = start + length - 1
-                control_bit_function = f"""can_signal_read({index}, {control_bit_position}, 1)"""
+                control_bit_function = f"can_signal_read({index}, {control_bit_position}, 1)"
                 if node in signal['getters']:
                     if 'update' in signal:
                         control_bit += update_function(name, control_bit_function)
@@ -383,11 +383,11 @@ def get_canbus_header(node, mode, messages):
     get = ''
 
     for message in messages:
-        for signal in message["signals"]:
+        for signal in message['signals']:
 
-            name = signal.get("name")
-            type = signal.get("type")
-            comment = signal.get("comment")
+            name = signal.get('name')
+            type = signal.get('type')
+            comment = signal.get('comment')
 
             if message['setter'] == node or node in signal['getters']:
 
