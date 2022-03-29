@@ -26,6 +26,8 @@
             "setter":"com",
             "signals":[
                 {"name":"rtc_year",          "type":"uint8_t", "start": 0,  "length": 7, "range": [0, 99],   "getters": ["hmi", "com"], "comment": "year of the RTC"},
+
+
                 {"name":"rtc_month",         "type":"uint8_t", "start": 7,  "length": 4, "range": [1, 12],   "getters": ["hmi", "com"], "comment": "month of the RTC"},
                 {"name":"rtc_day",           "type":"uint8_t", "start": 11, "length": 5, "range": [1, 31],   "getters": ["hmi", "com"], "comment": "day of the rtc"},
                 {"name":"rtc_hour",          "type":"uint8_t", "start": 16, "length": 5, "range": [0, 23],   "getters": ["hmi", "com"], "comment": "hour of the rtc"},
@@ -36,6 +38,7 @@
                 {"name":"terminal_status",   "type":"uint8_t", "start": 38, "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the terminal"},
                 {"name":"sdcard_status",     "type":"uint8_t", "start": 40, "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the SD card"},
                 {"name":"sdcard_free_space", "type":"uint8_t", "start": 42, "length": 7, "range": [0, 100],  "getters": ["hmi", "com"], "comment": "free space on the SD card in percent"},
+
                 {"name":"com_node_status",   "type":"uint8_t", "start": 49, "length": 2, "values": "system", "getters": ["hmi", "com"], "comment": "status of the Communication node"}
             ]
         },
@@ -43,6 +46,8 @@
             "id":"0x101",
             "setter":"sns",
             "signals":[
+
+
                 {"name":"temperature",                                 "type":"float",   "start": 0,  "length": 10, "range": [0.0, 50.0], "getters": ["act", "hmi", "com"], "comment": "ambient temperature"},
                 {"name":"humidity",                                    "type":"uint8_t", "start": 10, "length": 7,  "range": [0, 100],    "getters": ["act", "hmi", "com"], "comment": "ambient humidity percentage"},
                 {"name":"dht_sensor_status",                           "type":"uint8_t", "start": 17, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com"], "comment": "DHT sensor status"},
@@ -76,10 +81,13 @@
                 {"name":"actuator_node_status", "type":"uint8_t", "start": 24,  "length": 2, "values": "system", "getters": ["hmi", "com"], "comment": "status of the actuator node"}
             ]
         },
+
         {
             "id":"0x103",
             "setter":"hmi",
             "signals":[
+
+
                 {"name":"water_valve_manual_state", "control": true,     "type": "uint8_t", "start": 0,  "length": 2, "values":"vlvwin", "getters": ["com", "act"], "comment":"control state of the water valve manually"},
                 {"name":"heater_manual_state",      "control": true,     "type": "uint8_t", "start": 2,  "length": 2, "values":"states", "getters": ["com", "act"], "comment":"control state of the heater manually"},
                 {"name":"window_manual_state",      "control": true,     "type": "uint8_t", "start": 4,  "length": 2, "values":"vlvwin", "getters": ["com", "act"], "comment":"control state of the window manually"},
@@ -97,12 +105,14 @@
                 {"name":"temperature_possible_max", "calibration": true, "type": "uint8_t", "start": 39, "length": 7, "range": [1, 50],  "getters": ["com", "sns"], "comment":"max. temperature that can be measured"},
                 {"name":"humidity_possible_min",    "calibration": true, "type": "uint8_t", "start": 46, "length": 8, "range": [0, 100], "getters": ["com", "sns"], "comment":"min. humidity that can be measured"},
                 {"name":"humidity_possible_max",    "calibration": true, "type": "uint8_t", "start": 54, "length": 8, "range": [1, 100], "getters": ["com", "sns"], "comment":"max. humidity that can be measured"}
+
             ]
         },
         {
             "id":"0x104",
             "setter":"hmi",
             "signals":[
+
                 {"name":"temperature_target_min",     "calibration": true, "type": "uint8_t", "start": 0,  "length": 7, "range": [0, 50],  "getters": ["com", "act"], "comment":"min. target temperature"},
                 {"name":"temperature_target_max",     "calibration": true, "type": "uint8_t", "start": 7,  "length": 7, "range": [1, 50],  "getters": ["com", "act"], "comment":"max. target temperature"},
                 {"name":"humidity_target_min",        "calibration": true, "type": "uint8_t", "start": 14, "length": 8, "range": [0, 100], "getters": ["com", "act"], "comment":"min. target humidity"},
@@ -114,13 +124,18 @@
             ]
         },
         {
+
+
             "id":"0x105",
             "setter":"hmi",
             "signals":[
                 {"name":"water_level_target_min",    "calibration": true, "type": "uint8_t",  "start": 0,  "length": 8,  "range": [0, 100],    "getters": ["com", "act"], "comment":"min. target water level"},
                 {"name":"water_level_target_max",    "calibration": true, "type": "uint8_t",  "start": 8,  "length": 8,  "range": [1, 100],    "getters": ["com", "act"], "comment":"max. target water level"},
                 {"name":"water_consumed_target_max", "calibration": true, "type": "uint16_t", "start": 16, "length": 11, "range": [100, 1000], "getters": ["com", "act"], "comment":"max. consumed water per watering"},
+
+
                 {"name":"watering_time_max",         "calibration": true, "type": "uint8_t",  "start": 27, "length": 6,  "range": [5, 31],     "getters": ["com", "act"], "comment":"max. time for each watering"}
+
             ]
         }
     ]
