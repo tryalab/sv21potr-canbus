@@ -177,6 +177,7 @@ def generate_can_service_init(node, mode, messages):
         text = dedent('''
             void can_service_init(void)
             {
+                
             }
         ''')
     else:
