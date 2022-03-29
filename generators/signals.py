@@ -44,7 +44,6 @@ def get_json_txt(node, message):
               'third': ' Description', 'fourth': 'Values'}
     str += dedent(f'''
     {header['first']:<31}| {header['Second']:<11}| {header['third']:<51}| {header['fourth']:<10}|
-
     {"":->110}
             ''')
 
@@ -71,10 +70,9 @@ def get_json_txt(node, message):
                         str += f"{signal['name']:<31}| {signal['type']:<11}| {signal['comment']:<51}{definitions['status']}\n"
                     if signal['values'] == 'esp32':
                         str += f"{signal['name']:<31}| {signal['type']:<11}| {signal['comment']:<51}{definitions['esp32']}\n"
-
+    str += f"\n\nOutput signals\n"
     str += dedent(f'''
     {header['first']:<31}| {header['Second']:<11}| {header['third']:<51}| {header['fourth']:<10}|
-
     {"":->110}
             ''')
     for x in range(0, len(meddelande)):
@@ -95,4 +93,3 @@ def get_json_txt(node, message):
                     if utsignal['values'] == 'esp32':
                         str += f"{utsignal['name']:<31}| {utsignal['type']:<11}| {utsignal['comment']:<51}| {definitions['esp32']}\n"
     return str
-
