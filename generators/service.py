@@ -11,43 +11,44 @@ def get_content(node, mode, messages):
     text += generate_messages(messages)
     text += generate_can_signal_read()
     text += generate_can_signal_write()
-    text += generate_can_service_init(mode)
-    text += generate_can_service_run(mode)
+    text += generate_can_service_init(node, mode, messages)
+    text += generate_can_service_run(node, mode, messages)
     return text
 
 
 def generate_head(mode):
     text = ""
     if mode == "dev":
-        text = dedent(f'''
-            #include "can_signal.h"
-            #include "can_service.h"
-            
+        text = dedent(f'''\
+            # include "can_signal.h"
+            # include "can_service.h"
 
-            #define BYTE_BITS (8U)
+            # define BYTE_BITS (8U)
 
             typedef struct
             {{
-                uint32_t id;		// can identifier
-                uint16_t timestamp; // FlexCAN time when message arrived
+                uint32_t id;
+                uint16_t timestamp;
                 struct
                 {{
-                    uint8_t extended : 1; // identifier is extended (29-bit)
-                    uint8_t remote : 1;	  // remote transmission request packet type
-                    uint8_t overrun : 1;  // message overrun
+                    uint8_t extended : 1;
+                    uint8_t remote : 1;
+                    uint8_t overrun : 1;
                     uint8_t reserved : 5;
                 }} flags;
-                uint8_t len; // length of data
+                uint8_t len;
                 uint8_t buf[8];
             }} CAN_message_t;
         ''')
     else:
-        text = dedent(f'''
-            #include "FlexCAN.h"
-            #include "can_service.h"
-            
+        text = dedent(f'''\
+            # include "FlexCAN.h"
+            # include "can_signal.h"
+            # include "can_service.h"
 
-            #define BYTE_BITS (8U)
+            # define BYTE_BITS (8U)
+            # define BAUD_RATE 250000
+            # define WRITES_PER_READ (10U)
         ''')
     return text
 
@@ -141,18 +142,47 @@ def generate_can_signal_write():
     ''')
 
 
-def generate_can_service_init(mode):
+def get_rx_messages(node, messages):
+    rx_ids = []
+    for message in messages:
+        for signal in message['signals']:
+            if node in signal['getters']:
+                rx_ids.append(message['id'])
+                break
+    return rx_ids
+
+
+def get_rx_indeces(node, messages):
+    rx_indices = []
+    for index, message in enumerate(messages):
+        for signal in message['signals']:
+            if node in signal['getters']:
+                rx_indices.append(index)
+                break
+    return rx_indices
+
+
+def get_tx_indeces(node, messages):
+    tx_indices = []
+    for index, message in enumerate(messages):
+        if node == message['setter']:
+            tx_indices.append(index)
+    return tx_indices
+
+
+def generate_can_service_init(node, mode, messages):
     text = ""
     if mode == "dev":
 
         text = dedent('''
             void can_service_init(void)
             {
-            
             }
         ''')
     else:
-        text = dedent('''
+        rx_ids = get_rx_messages(node, messages)
+
+        text += dedent('''
             void can_service_init(void)
             {
                 Can0.begin(BAUD_RATE);
@@ -166,74 +196,59 @@ def generate_can_service_init(mode):
                 }
                 filter.flags.extended = 0;
 
-                filter.id = 0x100;
-                Can0.setFilter(filter, 0);
-                Can0.setMask(0x100, << 18, 0);
-
-                filter.id = 0x101;
-                Can0.setFilter(filter, 0);
-                Can0.setMask(0x101, << 18, 0);
-
-                filter.id = 0x102;
-                Can0.setFilter(filter, 0);
-                Can0.setMask(0x102, << 18, 0);
-
-                filter.id = 0x103;
-                Can0.setFilter(filter, 0);
-                Can0.setMask(0x103, << 18, 0);
-
-                filter.id = 0x104;
-                Can0.setFilter(filter, 0);
-                Can0.setMask(0x104, << 18, 0);
-            
-                filter.id = 0x105;
-                Can0.setFilter(filter, 0);
-                Can0.setMask(0x105, << 18, 0);
-                }
                 ''')
+        for index, value in enumerate(rx_ids):
+            text += '\tfilter.id = ' + value + ';\n'
+            text += '\tCan0.setFilter(filter, {0});\n'.format(index)
+            text += '\tCan0.setMask({0} << 18, {1});\n\n'.format(value, index)
+
+        text = text[:-1] + '}\n'
     return text
 
 
-def generate_can_service_run(mode):
+def generate_can_service_run(node, mode, messages):
     text = ""
     if mode == "dev":
         text = dedent('''
             void can_service_run(void)
             {
-            
+
             }
         ''')
     else:
+        tx_indeces = get_tx_indeces(node, messages)
+        tx_indeces = [str(x) for x in tx_indeces]
         text = dedent('''
             void can_service_run(void)
-            {
+            {{
                 static uint8_t counter = 0;
 
-                const uint8_t tx_index[6] = {0};
-                for (uint8_t i = 0; i < 6, i++)
-                {
-                 Can0.write(messages[tx_index[i]]);
-            }
-            counter++;
+                const uint8_t tx_index[{0}] = {{{1}}};
+                for (uint8_t i = 0; i < {0}, i++)
+                {{
+                    Can0.write(messages[tx_index[i]]);
+                }}
+                counter++;
+            '''.format(len(tx_indeces), ', '.join(tx_indeces)))
 
-            if (counter == WRITES_PER_READ)
-            {
-                counter = 0;
-                CAN_message_t msg_buffer;
-                const uint8_t rx_index[6] = {0, 1, 2, 3, 4, 5, 6}
-                while(Can0.read(msg_buffer))
-            }
-            
-            for (uint8_t i = 0; 1 < 6; i++)
-            {
-                    if(messages[rxindex[i]].id == msg_buffer.id)
-                    {
-                        messages[rx_index[i]] = msg_buffer;
-                    }  
-                  
-            }
-        }
-    } 
-}
-''')
+        rx_indeces = get_rx_indeces(node, messages)
+        rx_indeces = [str(x) for x in rx_indeces]
+
+        text += '''
+    if (counter == WRITES_PER_READ)
+    {{
+        counter = 0;
+        CAN_message_t msg;
+        const uint8_t rx_index[{0}] = {{{1}}};
+        while (Can0.read(msg))
+        {{
+            for (uint8_t i = 0; i < {0}; i++)
+            {{
+                if (messages[rx_index[i]].id == msg.id)
+                {{
+                    messages[rx_index[i]] = msg;
+                }}
+            }}
+        }}
+    }}\n}}'''.format(len(rx_indeces), ', '.join(rx_indeces))
     return text
