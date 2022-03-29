@@ -4,6 +4,8 @@ import json
 import shutil
 from pathlib import Path
 from generators import service
+from generators import common
+from generators import canbus
 
 ROOT = Path(__file__).parent
 
@@ -92,11 +94,19 @@ for message in data['messages']:
                 break
 del data['messages']
 
+
 for message in messages:
     for signal in message['signals']:
         if 'values' in signal:
             signal['values'] = defines[signal['values']]
 
-
 write_file(Path(TEENSY_CANBUS_DIR, 'can_service.cpp'),
            service.get_content(node, mode, messages[:]))
+
+write_file(Path(TEENSY_INCLUDE_DIR, 'common.h'),
+           common.get_teensy_common_header(node, messages[:]))
+
+
+if ESP32_INCLUDE_DIR != None:
+    write_file(Path(ESP32_INCLUDE_DIR, 'common.h'),
+               common.get_esp32_common_header(defines))
