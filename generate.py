@@ -53,8 +53,7 @@ else:
 ESP32_INCLUDE_DIR = None
 TEENSY_INCLUDE_DIR = Path(ROOT.parent, 'include')
 TEENSY_CANBUS_DIR = Path(ROOT.parent, 'lib', 'canbus')
-JSON_TXT_DIR = Path(ROOT.parent, )
-SIGNAL_TXT_FILE = Path(ROOT, 'sources')
+
 if node == 'com':
     ESP32_INCLUDE_DIR = Path(ROOT.parent, 'esp32', 'include')
     TEENSY_INCLUDE_DIR = Path(ROOT.parent, 'teensy', 'include')
@@ -110,8 +109,7 @@ write_file(Path(TEENSY_CANBUS_DIR, 'can_service.cpp'),
 write_file(Path(TEENSY_INCLUDE_DIR, 'common.h'),
            common.get_teensy_common_header(node, messages[:]))
 
-
-write_file(Path(SIGNAL_TXT_FILE, 'signals.txt'),
+write_file(Path(TEENSY_CANBUS_DIR, 'signals.txt'),
            signals.get_json_txt(node, messages[:]))
 
 
