@@ -8,6 +8,7 @@ from generators import common
 from generators import canbus
 from generators import signals
 
+
 ROOT = Path(__file__).parent
 
 MODES = ["dev", "prod"]
@@ -109,8 +110,10 @@ write_file(Path(TEENSY_CANBUS_DIR, 'can_service.cpp'),
 write_file(Path(TEENSY_INCLUDE_DIR, 'common.h'),
            common.get_teensy_common_header(node, messages[:]))
 
+
 write_file(Path(SIGNAL_TXT_FILE, 'signals.txt'),
            signals.get_json_txt(node, messages[:]))
+
 
 if ESP32_INCLUDE_DIR != None:
     write_file(Path(ESP32_INCLUDE_DIR, 'common.h'),
