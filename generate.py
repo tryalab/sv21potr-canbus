@@ -6,6 +6,8 @@ from pathlib import Path
 from generators import service
 from generators import common
 from generators import canbus
+from generators import signals
+
 
 ROOT = Path(__file__).parent
 
@@ -51,6 +53,7 @@ else:
 ESP32_INCLUDE_DIR = None
 TEENSY_INCLUDE_DIR = Path(ROOT.parent, 'include')
 TEENSY_CANBUS_DIR = Path(ROOT.parent, 'lib', 'canbus')
+
 if node == 'com':
     ESP32_INCLUDE_DIR = Path(ROOT.parent, 'esp32', 'include')
     TEENSY_INCLUDE_DIR = Path(ROOT.parent, 'teensy', 'include')
@@ -111,6 +114,9 @@ write_file(Path(TEENSY_CANBUS_DIR, 'canbus.cpp'),
 
 write_file(Path(TEENSY_INCLUDE_DIR, 'common.h'),
            common.get_teensy_common_header(node, messages[:]))
+
+write_file(Path(TEENSY_CANBUS_DIR, 'signals.txt'),
+           signals.get_json_txt(node, messages[:]))
 
 if ESP32_INCLUDE_DIR != None:
     write_file(Path(ESP32_INCLUDE_DIR, 'common.h'),
