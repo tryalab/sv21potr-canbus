@@ -29,6 +29,7 @@ def get_function(prototype, return_line):
               """
     return text
 
+
 def update_function(name, control_bit_function):
     text = \
         f"""
@@ -81,16 +82,11 @@ def set_min_function(prototype_set, prototype_get, valid, if_float_multiply, ind
     bool status = false;
 
     if ({valid})
-    {{
-        uint8_t max_value = {prototype_get[prototype_get.find('canbus'):prototype_get.find('min')] + "max"}();
-
-        if (max_value >= value)
-        {{\
-            {if_float_multiply}
-            can_signal_write({index}, {start}, {length}, (uint64_t)value);
-            can_signal_write({index}, {start + length}, 1, 1);
-            status = true;
-        }}
+    {{\
+        {if_float_multiply}
+        can_signal_write({index}, {start}, {length}, (uint64_t)value);
+        can_signal_write({index}, {start + length}, 1, 1);
+        status = true;
     }}
 
     return status;
@@ -129,16 +125,11 @@ def set_max_function(prototype_set, prototype_get, valid, if_float_multiply, ind
     bool status = false;
 
     if ({valid})
-    {{
-        uint8_t min_value = {prototype_get[prototype_get.find('canbus'):prototype_get.find('max')] + "min"}();
-
-        if (min_value <= value)
-        {{\
-            {if_float_multiply}
-            can_signal_write({index}, {start}, {length}, (uint64_t)value);
-            can_signal_write({index}, {start + length}, 1, 1);
-            status = true;
-        }}
+    {{\
+        {if_float_multiply}
+        can_signal_write({index}, {start}, {length}, (uint64_t)value);
+        can_signal_write({index}, {start + length}, 1, 1);
+        status = true;
     }}
 
     return status;
@@ -161,7 +152,7 @@ def get_canbus_source(node, mode, messages):
             length = signal.get('length')
 
             if message['setter'] == node or node in signal['getters']:
-                
+
                 if type == 'float':
                     if_float_multiply = "\n\t\tvalue *= 10;"
                     if_float_devide = " / 10"
@@ -174,7 +165,7 @@ def get_canbus_source(node, mode, messages):
                 if 'range' in signal:
                     low_boundary = str(signal['range'][0])
                     high_boundary = str(signal['range'][-1])
-                    
+
                     if signal['range'][0] != 0:
                         valid = f"{low_boundary} <= value && value <= {high_boundary}"
                     else:
@@ -188,7 +179,6 @@ def get_canbus_source(node, mode, messages):
                 else:
                     high_boundary = signal['values'][-1]
                     valid = f"value <= {high_boundary}"
-                    
 
                 # to remove control bit from message
                 if 'update' in signal or 'control' in signal or 'calibration' in signal:
@@ -222,49 +212,61 @@ def get_canbus_source(node, mode, messages):
 
                         if name.find('min') != -1:
                             if previous_name.find('max') != -1:
-                                previous_name = previous_name.replace(previous_name[len(previous_name) - 3:], 'min')
+                                previous_name = previous_name.replace(
+                                    previous_name[len(previous_name) - 3:], 'min')
                             if next_name.find('max') != -1:
-                                next_name = next_name.replace(next_name[len(next_name) - 3:], 'min')
+                                next_name = next_name.replace(
+                                    next_name[len(next_name) - 3:], 'min')
 
                             if name == previous_name or name == next_name:
-                                set += set_min_function(prototype_set, prototype_get, valid, if_float_multiply, index, start, length)
+                                set += set_min_function(
+                                    prototype_set, prototype_get, valid, if_float_multiply, index, start, length)
                             else:
-                                set += set_only_min_or_max_function(prototype_set, valid, if_float_multiply, index, start, length)
+                                set += set_only_min_or_max_function(
+                                    prototype_set, valid, if_float_multiply, index, start, length)
 
                         if name.find('max') != -1:
                             if previous_name.find('min') != -1:
-                                previous_name = previous_name.replace(previous_name[len(previous_name) - 3:], 'max')
+                                previous_name = previous_name.replace(
+                                    previous_name[len(previous_name) - 3:], 'max')
                             if next_name.find('min') != -1:
-                                next_name = next_name.replace(next_name[len(next_name) - 3:], 'max')
+                                next_name = next_name.replace(
+                                    next_name[len(next_name) - 3:], 'max')
 
                             if name == previous_name or name == next_name:
-                                set += set_max_function(prototype_set, prototype_get, valid, if_float_multiply, index, start, length)
+                                set += set_max_function(
+                                    prototype_set, prototype_get, valid, if_float_multiply, index, start, length)
                             else:
-                                set += set_only_min_or_max_function(prototype_set, valid, if_float_multiply, index, start, length)
+                                set += set_only_min_or_max_function(
+                                    prototype_set, valid, if_float_multiply, index, start, length)
                     else:
-                        set += set_function(prototype_set, valid, if_float_multiply, index, start, length)
-                
+                        set += set_function(prototype_set, valid,
+                                            if_float_multiply, index, start, length)
+
                 # generate getters functions
-                if prototype_get != '': 
-                        get += get_function(prototype_get, return_text)
+                if prototype_get != '':
+                    get += get_function(prototype_get, return_text)
 
                 # generate functions for update, control and calibration (_updated, _enabled, _valid)
                 control_bit_position = start + length - 1
                 control_bit_function = f"can_signal_read({index}, {control_bit_position}, 1)"
                 if node in signal['getters']:
                     if 'update' in signal:
-                        control_bit += update_function(name, control_bit_function)
+                        control_bit += update_function(name,
+                                                       control_bit_function)
 
                     elif 'control' in signal:
-                        control_bit += control_function(name, control_bit_function)
+                        control_bit += control_function(name,
+                                                        control_bit_function)
 
                     elif 'calibration' in signal:
-                        control_bit += calibration_function(name, control_bit_function)
+                        control_bit += calibration_function(
+                            name, control_bit_function)
 
     text = f'''\
-# include "canbus.h"
-# include "can_signal.h"
-# include "common.h"
+#include "canbus.h"
+#include "common.h"
+#include "can_signal.h"
 
 static int64_t convert_if_negative(uint64_t value, uint8_t bit_length)
 {{
@@ -283,50 +285,50 @@ static int64_t convert_if_negative(uint64_t value, uint8_t bit_length)
     return text
 
 
-def set_test_double_header(comment, name, type):
+def set_test_double_header(comment, ret_desc, name, type):
     text = \
         f"""
 /**
  * @brief This function is used as test double to set {comment}.
  * @param value The value to set.
- * @return true if value is valid otherwise return false.
+ * @return true if value is {ret_desc}; otherwise false.
  */
 bool canbus_test_set_{name}({type} value);
               """
     return text
 
 
-def set_header(comment, name, type):
+def set_header(comment, ret_desc, name, type):
     text = \
         f"""
 /**
  * @brief This function is used to set {comment}.
  * @param value The value to set.
- * @return true if value is valid otherwise return false.
+ * @return true if value is {ret_desc}; otherwise false.
  */
 bool canbus_set_{name}({type} value);
               """
     return text
 
 
-def get_test_double_header(comment, name, type):
+def get_test_double_header(comment, ret_desc, name, type):
     text = \
         f"""
 /**
  * @brief This function is used as test double to get {comment}.
- * @return {name} The extracted data.
+ * @return {type} The {comment} which is {ret_desc}.
  */
 {type} canbus_test_get_{name}(void);
               """
     return text
 
 
-def get_header(comment, name, type):
+def get_header(comment, ret_desc, name, type):
     text = \
         f"""
 /**
  * @brief This function is used to get {comment}.
- * @return {type} The extracted data.
+ * @return {type} The {comment} which is {ret_desc}.
  */
 {type} canbus_get_{name}(void);
               """
@@ -338,7 +340,7 @@ def update_header(comment, name):
         f"""
 /**
  * @brief This function is used to check if {comment} is updated.
- * @return true if signal is updated.
+ * @return true if signal is updated; otherwise false
  */
 bool canbus_is_{name}_updated(void);
               """
@@ -350,7 +352,7 @@ def control_header(comment, name):
         f"""
 /**
  * @brief This function is used to check if {comment} is enabled.
- * @return true if signal is enabled.
+ * @return true if signal is enabled; otherwise false
  */
 bool canbus_is_{name}_enabled(void);
               """
@@ -362,7 +364,7 @@ def calibration_header(comment, name):
         f"""
 /**
  * @brief This function is used to check if {comment} is valid.
- * @return true if value in range is valid.
+ * @return true if the calibration value is valid; otherwise false.
  */
 bool canbus_is_{name}_valid(void);
               """
@@ -383,22 +385,31 @@ def get_canbus_header(node, mode, messages):
             comment = signal.get('comment')
 
             if message['setter'] == node or node in signal['getters']:
+                description = ''
+                if 'range' in signal:
+                    description = 'in the range of [{0}, {1}]'.format(
+                        signal['range'][0], signal['range'][1])
+                else:
+                    description = ', '.join(signal['values'][:-1])
+                    description += ' or ' + signal['values'][-1]
 
                 if message['setter'] == node and node in signal['getters']:
-                    set += set_header(comment, name, type)
-                    get += get_header(comment, name, type)
+                    set += set_header(comment, description, name, type)
+                    get += get_header(comment, description, name, type)
 
                 elif message['setter'] == node and node not in signal['getters']:
-                    set += set_header(comment, name, type)
+                    set += set_header(comment, description, name, type)
 
                     if mode == 'dev':
-                        get += get_test_double_header(comment, name, type)
+                        get += get_test_double_header(comment,
+                                                      description,  name, type)
 
                 elif message['setter'] != node and node in signal['getters']:
-                    get += get_header(comment, name, type)
+                    get += get_header(comment, description, name, type)
 
                     if mode == 'dev':
-                        set += set_test_double_header(comment, name, type)
+                        set += set_test_double_header(comment,
+                                                      description, name, type)
 
                 if node in signal['getters']:
                     if 'update' in signal:
@@ -409,14 +420,14 @@ def get_canbus_header(node, mode, messages):
                         control_bit += calibration_header(comment, name)
 
     text = f"""\
-# ifndef CANBUS_H
-# define CANBUS_H
+#ifndef CANBUS_H
+#define CANBUS_H
 
-# include <stdint.h>
-# include <stdbool.h>
+#include <stdint.h>
+#include <stdbool.h>
 {set}
 {get}
 {control_bit}
-# endif /* CANBUS_H */\
+#endif /* CANBUS_H */\
 """
     return text
