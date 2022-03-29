@@ -20,10 +20,10 @@ def generate_head(mode):
     text = ""
     if mode == "dev":
         text = dedent(f'''\
-            # include "can_signal.h"
-            # include "can_service.h"
+            #include "can_signal.h"
+            #include "can_service.h"
 
-            # define BYTE_BITS (8U)
+            #define BYTE_BITS (8U)
 
             typedef struct
             {{
@@ -42,13 +42,13 @@ def generate_head(mode):
         ''')
     else:
         text = dedent(f'''\
-            # include "FlexCAN.h"
-            # include "can_signal.h"
-            # include "can_service.h"
+            #include "FlexCAN.h"
+            #include "can_signal.h"
+            #include "can_service.h"
 
-            # define BYTE_BITS (8U)
-            # define BAUD_RATE 250000
-            # define WRITES_PER_READ (10U)
+            #define BYTE_BITS (8U)
+            #define BAUD_RATE (250000U)
+            #define WRITES_PER_READ (10U)
         ''')
     return text
 
