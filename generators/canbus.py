@@ -151,6 +151,7 @@ def get_canbus_source(node, mode, messages):
                 else:
                     high_boundary = signal['values'][-1]
                     valid = f"value <= {high_boundary}"
+                    return_text = f"return ({type})can_signal_read({index}, {start}, {length}){if_float_devide};"
 
                 # to remove control bit from message
                 if 'update' in signal or 'control' in signal or 'calibration' in signal:
