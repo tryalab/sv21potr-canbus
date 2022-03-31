@@ -62,6 +62,17 @@ bool canbus_is_{name}_enabled(void)
     return text
 
 
+def control_set_function(prototype_control, control_bit_function):
+    text = \
+        f"""
+{prototype_control}
+{{
+    {control_bit_function};
+}}
+              """
+    return text
+
+
 def calibration_function(name, control_bit_function):
     text = \
         f"""
@@ -121,6 +132,8 @@ def get_canbus_source(node, mode, messages):
             type = signal.get('type')
             start = signal.get('start')
             length = signal.get('length')
+            prototype_set = ''
+            prototype_get = ''
 
             if message['setter'] == node or node in signal['getters']:
 
@@ -158,16 +171,17 @@ def get_canbus_source(node, mode, messages):
                     length -= 1
 
                 # setters and getters function names
-                if message['setter'] == node:
+                if node == message['setter']:
                     prototype_set = f"bool canbus_set_{name}({type} value)"
+
                     if node not in signal['getters']:
                         if mode == 'dev':
                             prototype_get = f"{type} canbus_test_get_{name}(void)"
                 if node in signal['getters']:
                     prototype_get = f"{type} canbus_get_{name}(void)"
-                    if message['setter'] != node:
+                    if node != message['setter']:
                         if mode == 'dev':
-                            prototype_set = f"bool canbus_test_set_{name}({type} value)"      
+                            prototype_set = f"bool canbus_test_set_{name}({type} value)"
 
                 # generate setters functions
                 if prototype_set != '':
@@ -182,16 +196,30 @@ def get_canbus_source(node, mode, messages):
 
                 # generate functions for update, control and calibration (_updated, _enabled, _valid)
                 control_bit_position = start + length - 1
-                control_bit_function = f"can_signal_read({index}, {control_bit_position}, 1)"
+                control_bit_read_function = f"can_signal_read({index}, {control_bit_position}, 1)"
+               
                 if node in signal['getters']:
                     if 'update' in signal:
-                        control_bit += update_function(name, control_bit_function)
+                        control_bit += update_function(name, control_bit_read_function)
 
                     elif 'control' in signal:
-                        control_bit += control_function(name, control_bit_function)
+                        control_write_function = f"can_signal_write({index}, {control_bit_position}, 1, (uint64_t)value)"
+                        if "state" in name:
+                            replace_name = name.replace(name[len(name) - 5:], "mode")
+                        else:
+                            replace_name = name + "_mode"
+                        
+                        prototype_control = f"void canbus_set_{replace_name}({type} value)"
+                        prototype_control_test = f"void canbus_test_set_{replace_name}(bool value)"
+                        
+                        control_bit += control_function(replace_name, control_bit_read_function)
+                        if mode == 'dev':
+                            control_bit += control_set_function(prototype_control_test, control_write_function)
+                        else:
+                            control_bit += control_set_function(prototype_control, control_write_function)
 
                     elif 'calibration' in signal:
-                        control_bit += calibration_function(name, control_bit_function)
+                        control_bit += calibration_function(name, control_bit_read_function)
 
     text = f'''\
 #include "canbus.h"
@@ -267,14 +295,38 @@ bool canbus_is_{name}_updated(void);
     return text
 
 
-def control_header(name):
+def control_header(name, replace_name):
     text = \
         f"""
 /**
  * @brief This function is used to check if {name} is enabled.
  * @return true if signal is enabled; otherwise false
  */
-bool canbus_is_{name}_enabled(void);
+bool canbus_is_{replace_name}_enabled(void);
+              """
+    return text
+
+
+def set_control_header(name, replace_name):
+    text = \
+        f"""
+/**
+ * @brief This function is used to set the mode of {name}.
+ * @param value The value to set.
+ */
+void canbus_set_{replace_name}(bool value);
+              """
+    return text
+
+
+def set_test_control_header(name, replace_name):
+    text = \
+        f"""
+/**
+ * @brief This function is used as a test double to set the mode of {name}.
+ * @param value The value to set.
+ */
+void canbus_test_set_{replace_name}(bool value);
               """
     return text
 
@@ -327,7 +379,16 @@ def get_canbus_header(node, mode, messages):
                     if 'update' in signal:
                         control_bit += update_header(comment, name)
                     elif 'control' in signal:
-                        control_bit += control_header(name)
+                        if 'state' in name:
+                            replace_name = name.replace(name[len(name) - 5:], "mode")
+                        else:
+                            replace_name = name + "_mode"
+
+                        control_bit += control_header(name, replace_name)
+                        if mode == 'dev':
+                            control_bit += set_test_control_header(name, replace_name)
+                        else:
+                            control_bit += set_control_header(name, replace_name)
                     elif 'calibration' in signal:
                         control_bit += calibration_header(comment, name)
 
