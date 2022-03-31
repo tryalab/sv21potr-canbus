@@ -143,6 +143,10 @@ def get_canbus_source(node, mode, messages):
                 else:
                     if_float_multiply = ""
                     if_float_devide = ""
+            
+                    # to remove control bit from message
+                if 'update' in signal or 'control' in signal or 'calibration' in signal:
+                    length -= 1
 
                 valid = ''
                 # decide the value range for validity
@@ -165,10 +169,6 @@ def get_canbus_source(node, mode, messages):
                     high_boundary = signal['values'][-1]
                     valid = f"value <= {high_boundary}"
                     return_text = f"return ({type})can_signal_read({index}, {start}, {length}){if_float_devide};"
-
-                # to remove control bit from message
-                if 'update' in signal or 'control' in signal or 'calibration' in signal:
-                    length -= 1
 
                 # setters and getters function names
                 if node == message['setter']:
@@ -195,7 +195,7 @@ def get_canbus_source(node, mode, messages):
                     get += get_function(prototype_get, return_text)
 
                 # generate functions for update, control and calibration (_updated, _enabled, _valid)
-                control_bit_position = start + length - 1
+                control_bit_position = start + length
                 control_bit_read_function = f"can_signal_read({index}, {control_bit_position}, 1)"
                
                 if node in signal['getters']:
