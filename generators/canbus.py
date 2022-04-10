@@ -84,6 +84,28 @@ bool canbus_is_{name}_valid(void)
     return text
 
 
+def set_update_function(prototype_set, valid, if_float_multiply, index, start, length):
+
+    text = \
+        f"""
+{prototype_set}
+{{
+    bool status = false;
+    static uint8_t update = 0;
+    if ({valid})
+    {{\
+        {if_float_multiply}
+        update = !update;
+        can_signal_write({index}, {start}, {length}, (uint64_t)value);
+        can_signal_write({index}, {start + length}, 1, (uint64_t)update);
+        status = true;
+    }}
+
+    return status;
+}}
+              """
+    return text
+
 def set_min_max_function(prototype_set, valid, if_float_multiply, index, start, length):
 
     text = \
@@ -148,6 +170,10 @@ def get_canbus_source(node, mode, messages):
                 if 'update' in signal or 'control' in signal or 'calibration' in signal:
                     length -= 1
 
+                    # generate functions for update, control and calibration (_updated, _enabled, _valid)
+                control_bit_position = start + length
+                control_bit_read_function = f"can_signal_read({index}, {control_bit_position}, 1)"
+
                 valid = ''
                 # decide the value range for validity
                 if 'range' in signal:
@@ -187,16 +213,14 @@ def get_canbus_source(node, mode, messages):
                 if prototype_set != '':
                     if 'calibration' in signal:
                         set += set_min_max_function(prototype_set, valid, if_float_multiply, index, start, length)
+                    elif 'update' in signal:
+                        set += set_update_function(prototype_set, valid, if_float_multiply, index, start, length)
                     else:
                         set += set_function(prototype_set, valid, if_float_multiply, index, start, length)
 
                 # generate getters functions
                 if prototype_get != '':
                     get += get_function(prototype_get, return_text)
-
-                # generate functions for update, control and calibration (_updated, _enabled, _valid)
-                control_bit_position = start + length
-                control_bit_read_function = f"can_signal_read({index}, {control_bit_position}, 1)"
                
                 if node in signal['getters']:
                     if 'update' in signal:
@@ -209,7 +233,7 @@ def get_canbus_source(node, mode, messages):
                         else:
                             replace_name = name + "_mode"
                         
-                        prototype_control = f"void canbus_set_{replace_name}({type} value)"
+                        prototype_control = f"void canbus_set_{replace_name}(bool value)"
                         prototype_control_test = f"void canbus_test_set_{replace_name}(bool value)"
                         
                         control_bit += control_function(replace_name, control_bit_read_function)
