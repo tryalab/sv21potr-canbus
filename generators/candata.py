@@ -36,11 +36,6 @@ def get_candata_source(messages):
 static char buffer[500] = {0};
 static uint8_t counter = 0;
 
-char *get_I2C_buffer(void)
-{
-    return buffer;
-}
-
 static void insert_float_to_buffer(float value)
 {
     char str[10];
@@ -57,8 +52,16 @@ static void insert_float_to_buffer(float value)
             break;
         }
     }
+    buffer[counter] = '|';
+    counter++;
 }
-static void can_data_get_temp(void)
+
+char *get_I2C_buffer(void)
+{
+    return buffer;
+}
+
+void can_data_get_temp(void)
 {
     float value = canbus_get_temperature();
     insert_float_to_buffer(value);
