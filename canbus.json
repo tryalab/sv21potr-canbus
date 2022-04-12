@@ -54,7 +54,7 @@
                 {"name":"water_level_sensor_status",                   "type":"uint8_t", "start": 47, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com"], "comment": "water level sensor status"},
                 {"name":"soil_moisture",                               "type":"uint8_t", "start": 49, "length": 7,  "range": [0, 100],    "getters": ["act", "hmi", "com"], "comment": "soil moisture percentage"},
                 {"name":"soil_moisture_sensor_status",                 "type":"uint8_t", "start": 56, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com"], "comment": "soil moisture sensor status"},
-                {"name":"sensor_node_status",                          "type":"uint8_t", "start": 58, "length": 2,  "values": "system",   "getters": ["hmi", "com"],        "comment": "status of the sensor node"}
+                {"name":"sensor_node_status",                          "type":"uint8_t", "start": 58, "length": 2,  "values": "system",   "getters": ["hmi", "com", "sns"], "comment": "status of the sensor node"}
             ]
         },
         {
