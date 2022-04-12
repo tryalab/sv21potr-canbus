@@ -1,4 +1,5 @@
 import os
+from pydoc_data.topics import topics
 import sys
 import json
 import shutil
@@ -7,6 +8,8 @@ from generators import service
 from generators import common
 from generators import canbus
 from generators import signals
+from generators import candata
+from generators import topicz
 
 
 ROOT = Path(__file__).parent
@@ -121,3 +124,13 @@ write_file(Path(TEENSY_CANBUS_DIR, 'signals.txt'),
 if ESP32_INCLUDE_DIR != None:
     write_file(Path(ESP32_INCLUDE_DIR, 'common.h'),
                common.get_esp32_common_header(defines))
+
+if node == "com" and mode == "prod":
+    write_file(Path(TEENSY_CANBUS_DIR, 'candata.h'),
+               candata.get_candata_header(messages[:]))
+    
+    write_file(Path(TEENSY_CANBUS_DIR, 'candata.cpp'),
+               candata.get_candata_source(messages[:]))
+
+    write_file(Path(ESP32_INCLUDE_DIR, 'topics.h'),
+               topicz.get_topics(messages[:]))
