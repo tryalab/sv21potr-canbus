@@ -67,13 +67,13 @@
                 {"name":"lamp_brightness",      "type":"uint8_t", "start": 3,   "length": 7, "range" : [0, 100], "getters": ["hmi", "com"], "comment": "brightness of the lamp in percent"},
                 {"name":"water_valve_state",    "type":"uint8_t", "start": 10,  "length": 1, "values": "vlvwin", "getters": ["hmi", "com"], "comment": "state of water valve"},
                 {"name":"water_pump_state",     "type":"uint8_t", "start": 11,  "length": 1, "values": "states", "getters": ["hmi", "com"], "comment": "water pump state"},
-                {"name":"heater_status",        "type":"uint8_t", "start": 12,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of heater"},
-                {"name":"fans_status",          "type":"uint8_t", "start": 14,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the fans"},
-                {"name":"window_status",        "type":"uint8_t", "start": 16,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the heater"},
-                {"name":"lamp_status",          "type":"uint8_t", "start": 18,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "LED lamp status"},
-                {"name":"water_valve_status",   "type":"uint8_t", "start": 20,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the water valve"},
-                {"name":"water_pump_status",    "type":"uint8_t", "start": 22,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the water pump"},
-                {"name":"actuator_node_status", "type":"uint8_t", "start": 24,  "length": 2, "values": "system", "getters": ["hmi", "com", "act"], "comment": "status of the actuator node"}
+                {"name":"heater_status",        "type":"uint8_t", "start": 12,  "length": 2, "values": "status", "getters": ["hmi", "com", "act"], "comment": "status of heater"},
+                {"name":"fans_status",          "type":"uint8_t", "start": 14,  "length": 2, "values": "status", "getters": ["hmi", "com", "act"], "comment": "status of the fans"},
+                {"name":"window_status",        "type":"uint8_t", "start": 16,  "length": 2, "values": "status", "getters": ["hmi", "com", "act"], "comment": "status of the heater"},
+                {"name":"lamp_status",          "type":"uint8_t", "start": 18,  "length": 2, "values": "status", "getters": ["hmi", "com", "act"], "comment": "LED lamp status"},
+                {"name":"water_valve_status",   "type":"uint8_t", "start": 20,  "length": 2, "values": "status", "getters": ["hmi", "com", "act"], "comment": "status of the water valve"},
+                {"name":"water_pump_status",    "type":"uint8_t", "start": 22,  "length": 2, "values": "status", "getters": ["hmi", "com", "act"], "comment": "status of the water pump"},
+                {"name":"actuator_node_status", "type":"uint8_t", "start": 24,  "length": 2, "values": "system", "getters": ["hmi", "com"], "comment": "status of the actuator node"}
             ]
         },
         {
