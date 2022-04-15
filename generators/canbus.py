@@ -1,8 +1,7 @@
-
-def set_function(prototype, valid, if_float_multiply, index, start, length):
+def set_function(name, type, valid, if_float_multiply, index, start, length):
     text = \
         f"""
-{prototype}
+bool canbus_set_{name}({type} value)
 {{
     bool status = false;
 
@@ -18,17 +17,44 @@ def set_function(prototype, valid, if_float_multiply, index, start, length):
               """
     return text
 
-
-def get_function(prototype, return_line):
+def set_test_function(name, type, valid, if_float_multiply, index, start, length):
     text = \
         f"""
-{prototype}
+bool canbus_test_set_{name}({type} value)
+{{
+    bool status = false;
+
+    if ({valid})
+    {{\
+        {if_float_multiply}
+        can_signal_write({index}, {start}, {length}, (uint64_t)value);
+        status = true;
+    }}
+
+    return status;
+}}
+              """
+    return text
+
+def get_function(name, type, return_line):
+    text = \
+        f"""
+{type} canbus_get_{name}(void)
 {{
     {return_line}
 }}
               """
     return text
 
+def get_test_function(name, type, return_line):
+    text = \
+        f"""
+{type} canbus_test_get_{name}(void)
+{{
+    {return_line}
+}}
+              """
+    return text
 
 def update_function(name, control_bit_function):
     text = \
@@ -50,7 +76,6 @@ bool canbus_is_{name}_updated(void)
               """
     return text
 
-
 def control_function(name, control_bit_function):
     text = \
         f"""
@@ -61,17 +86,35 @@ bool canbus_is_{name}_enabled(void)
               """
     return text
 
-
-def control_set_function(prototype_control, control_bit_function):
+def control_test_function(name, control_bit_function):
     text = \
         f"""
-{prototype_control}
+bool canbus_test_is_{name}_enabled(void)
+{{
+    return {control_bit_function};
+}}
+              """
+    return text
+
+def control_set_function(replace_name, control_bit_function):
+    text = \
+        f"""
+void canbus_set_{replace_name}(bool value)
 {{
     {control_bit_function};
 }}
               """
     return text
 
+def control_test_set_function(replace_name, control_bit_function):
+    text = \
+        f"""
+void canbus_test_set_{replace_name}(bool value)
+{{
+    {control_bit_function};
+}}
+              """
+    return text
 
 def calibration_function(name, control_bit_function):
     text = \
@@ -83,12 +126,11 @@ bool canbus_is_{name}_valid(void)
               """
     return text
 
-
-def set_update_function(prototype_set, valid, if_float_multiply, index, start, length):
+def set_update_function(name, type, valid, if_float_multiply, index, start, length):
 
     text = \
         f"""
-{prototype_set}
+bool canbus_set_{name}({type} value)
 {{
     bool status = false;
     static uint8_t update = 0;
@@ -106,11 +148,54 @@ def set_update_function(prototype_set, valid, if_float_multiply, index, start, l
               """
     return text
 
-def set_min_max_function(prototype_set, valid, if_float_multiply, index, start, length):
+def set_test_update_function(name, type, valid, if_float_multiply, index, start, length):
 
     text = \
         f"""
-{prototype_set}
+bool canbus_test_set_{name}({type} value)
+{{
+    bool status = false;
+    static uint8_t update = 0;
+    if ({valid})
+    {{\
+        {if_float_multiply}
+        update = !update;
+        can_signal_write({index}, {start}, {length}, (uint64_t)value);
+        can_signal_write({index}, {start + length}, 1, (uint64_t)update);
+        status = true;
+    }}
+
+    return status;
+}}
+              """
+    return text
+
+def set_min_max_function(name, type, valid, if_float_multiply, index, start, length):
+
+    text = \
+        f"""
+bool canbus_set_{name}({type} value)
+{{
+    bool status = false;
+
+    if ({valid})
+    {{\
+        {if_float_multiply}
+        can_signal_write({index}, {start}, {length}, (uint64_t)value);
+        can_signal_write({index}, {start + length}, 1, 1);
+        status = true;
+    }}
+
+    return status;
+}}
+              """
+    return text
+
+def set_test_min_max_function(name, type, valid, if_float_multiply, index, start, length):
+
+    text = \
+        f"""
+bool canbus_test_set_{name}({type} value)
 {{
     bool status = false;
 
@@ -154,8 +239,6 @@ def get_canbus_source(node, mode, messages):
             type = signal.get('type')
             start = signal.get('start')
             length = signal.get('length')
-            prototype_set = ''
-            prototype_get = ''
 
             if message['setter'] == node or node in signal['getters']:
 
@@ -195,53 +278,46 @@ def get_canbus_source(node, mode, messages):
                     high_boundary = signal['values'][-1]
                     valid = f"value <= {high_boundary}"
                     return_text = f"return ({type})can_signal_read({index}, {start}, {length}){if_float_devide};"
+                
+                if 'control' in signal:
+                    control_write_function = f"can_signal_write({index}, {control_bit_position}, 1, (uint64_t)value)"
+                    if "state" in name:
+                        replace_name = name.replace(name[len(name) - 5:], "mode")
+                    else:
+                        replace_name = name + "_mode"
 
-                # setters and getters function names
-                if node == message['setter']:
-                    prototype_set = f"bool canbus_set_{name}({type} value)"
-
+                # generate setters, getters and control bit functions
+                if message['setter'] == node:
+                    if 'control' in signal:
+                        control_bit += control_set_function(replace_name, control_write_function)
+                    if 'calibration' in signal:
+                        set += set_min_max_function(name, type, valid, if_float_multiply, index, start, length)
+                    elif 'update' in signal:
+                        set += set_update_function(name, type, valid, if_float_multiply, index, start, length)
+                    else:
+                        set += set_function(name, type, valid, if_float_multiply, index, start, length)
                     if node not in signal['getters']:
                         if mode == 'dev':
-                            prototype_get = f"{type} canbus_test_get_{name}(void)"
+                            get += get_test_function(name, type, return_text)
+                            if 'control' in signal:
+                                control_bit += control_test_function(replace_name, control_bit_read_function)
                 if node in signal['getters']:
-                    prototype_get = f"{type} canbus_get_{name}(void)"
-                    if node != message['setter']:
+                    get += get_function(name, type, return_text)
+                    if message['setter'] != node:
                         if mode == 'dev':
-                            prototype_set = f"bool canbus_test_set_{name}({type} value)"
-
-                # generate setters functions
-                if prototype_set != '':
-                    if 'calibration' in signal:
-                        set += set_min_max_function(prototype_set, valid, if_float_multiply, index, start, length)
-                    elif 'update' in signal:
-                        set += set_update_function(prototype_set, valid, if_float_multiply, index, start, length)
-                    else:
-                        set += set_function(prototype_set, valid, if_float_multiply, index, start, length)
-
-                # generate getters functions
-                if prototype_get != '':
-                    get += get_function(prototype_get, return_text)
-               
-                if node in signal['getters']:
+                            if 'calibration' in signal:
+                                set += set_test_min_max_function(name, type, valid, if_float_multiply, index, start, length)
+                            elif 'update' in signal:
+                                set += set_test_update_function(name, type, valid, if_float_multiply, index, start, length)
+                            else:
+                                set += set_test_function(name, type, valid, if_float_multiply, index, start, length)
+                    
                     if 'update' in signal:
                         control_bit += update_function(name, control_bit_read_function)
-
                     elif 'control' in signal:
-                        control_write_function = f"can_signal_write({index}, {control_bit_position}, 1, (uint64_t)value)"
-                        if "state" in name:
-                            replace_name = name.replace(name[len(name) - 5:], "mode")
-                        else:
-                            replace_name = name + "_mode"
-                        
-                        prototype_control = f"void canbus_set_{replace_name}(bool value)"
-                        prototype_control_test = f"void canbus_test_set_{replace_name}(bool value)"
-                        
                         control_bit += control_function(replace_name, control_bit_read_function)
                         if mode == 'dev':
-                            control_bit += control_set_function(prototype_control_test, control_write_function)
-                        else:
-                            control_bit += control_set_function(prototype_control, control_write_function)
-
+                            set += control_test_set_function(replace_name, control_write_function)
                     elif 'calibration' in signal:
                         control_bit += calibration_function(name, control_bit_read_function)
 
@@ -256,7 +332,6 @@ def get_canbus_source(node, mode, messages):
 '''
     return text
 
-
 def set_test_double_header(comment, ret_desc, name, type):
     text = \
         f"""
@@ -268,7 +343,6 @@ def set_test_double_header(comment, ret_desc, name, type):
 bool canbus_test_set_{name}({type} value);
               """
     return text
-
 
 def set_header(comment, ret_desc, name, type):
     text = \
@@ -282,7 +356,6 @@ bool canbus_set_{name}({type} value);
               """
     return text
 
-
 def get_test_double_header(comment, ret_desc, name, type):
     text = \
         f"""
@@ -293,7 +366,6 @@ def get_test_double_header(comment, ret_desc, name, type):
 {type} canbus_test_get_{name}(void);
               """
     return text
-
 
 def get_header(comment, ret_desc, name, type):
     text = \
@@ -306,7 +378,6 @@ def get_header(comment, ret_desc, name, type):
               """
     return text
 
-
 def update_header(comment, name):
     text = \
         f"""
@@ -317,7 +388,6 @@ def update_header(comment, name):
 bool canbus_is_{name}_updated(void);
               """
     return text
-
 
 def control_header(name, replace_name):
     text = \
@@ -330,6 +400,16 @@ bool canbus_is_{replace_name}_enabled(void);
               """
     return text
 
+def control_test_header(name, replace_name):
+    text = \
+        f"""
+/**
+ * @brief This function is a test double and is used to check if {name} is enabled.
+ * @return true if signal is enabled; otherwise false
+ */
+bool canbus_test_is_{replace_name}_enabled(void);
+              """
+    return text
 
 def set_control_header(name, replace_name):
     text = \
@@ -342,7 +422,6 @@ void canbus_set_{replace_name}(bool value);
               """
     return text
 
-
 def set_test_control_header(name, replace_name):
     text = \
         f"""
@@ -354,7 +433,6 @@ void canbus_test_set_{replace_name}(bool value);
               """
     return text
 
-
 def calibration_header(comment, name):
     text = \
         f"""
@@ -365,7 +443,6 @@ def calibration_header(comment, name):
 bool canbus_is_{name}_valid(void);
               """
     return text
-
 
 def get_canbus_header(node, mode, messages):
     text = ''
@@ -387,32 +464,33 @@ def get_canbus_header(node, mode, messages):
                 else:
                     description = ', '.join(signal['values'][:-1])
                     description += ' or ' + signal['values'][-1]
+                
+                if 'state' in name:
+                    replace_name = name.replace(name[len(name) - 5:], "mode")
+                else:
+                    replace_name = name + "_mode"
 
                 if message['setter'] == node:
                     set += set_header(comment, description, name, type)
+                    if 'control' in signal:
+                        control_bit += set_control_header(name, replace_name)
                     if node not in signal['getters']:
                         if mode == 'dev':
                             get += get_test_double_header(comment, description, name, type)
+                            if 'control' in signal:
+                                control_bit += control_test_header(name, replace_name)
                 if node in signal['getters']:
                     get += get_header(comment, description, name, type)
                     if message['setter'] != node:
                         if mode == 'dev':
                             set += set_test_double_header(comment, description, name, type)
 
-                if node in signal['getters']:
                     if 'update' in signal:
                         control_bit += update_header(comment, name)
                     elif 'control' in signal:
-                        if 'state' in name:
-                            replace_name = name.replace(name[len(name) - 5:], "mode")
-                        else:
-                            replace_name = name + "_mode"
-
                         control_bit += control_header(name, replace_name)
                         if mode == 'dev':
-                            control_bit += set_test_control_header(name, replace_name)
-                        else:
-                            control_bit += set_control_header(name, replace_name)
+                            set += set_test_control_header(name, replace_name)
                     elif 'calibration' in signal:
                         control_bit += calibration_header(comment, name)
 
