@@ -1,5 +1,4 @@
 import os
-from pydoc_data.topics import topics
 import sys
 import json
 import shutil
@@ -9,7 +8,7 @@ from generators import common
 from generators import canbus
 from generators import signals
 from generators import candata
-from generators import topicz
+from generators import topics
 
 
 ROOT = Path(__file__).parent
@@ -30,6 +29,17 @@ except:
     print("Failed to open the json file")
     exit(1)
 
+# Load canbus_struct.json
+try:
+    with open(Path(ROOT, 'canbus_struct.json')) as file:
+        try:
+            data_struct = json.load(file)
+        except:
+            print("Failed to read and parse the json file")
+            exit(1)
+except:
+    print("Failed to open the json file")
+    exit(1)
 
 def print_arg_error():
     print("Error...")
@@ -84,6 +94,8 @@ def write_file(file_name, content):
         print("Failed to write to {}".format(file_name))
         exit(4)
 
+nodes = data_struct['nodes']
+del data_struct['nodes']
 
 defines = data['defines']
 del data['defines']
@@ -127,10 +139,10 @@ if ESP32_INCLUDE_DIR != None:
 
 if node == "com" and mode == "prod":
     write_file(Path(TEENSY_CANBUS_DIR, 'candata.h'),
-               candata.get_candata_header(messages[:]))
+               candata.get_candata_header(nodes))
     
     write_file(Path(TEENSY_CANBUS_DIR, 'candata.cpp'),
-               candata.get_candata_source(messages[:]))
+               candata.get_candata_source(nodes))
 
     write_file(Path(ESP32_INCLUDE_DIR, 'topics.h'),
-               topicz.get_topics(messages[:]))
+               topics.get_topics(nodes))

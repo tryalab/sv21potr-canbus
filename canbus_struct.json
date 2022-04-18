@@ -1,0 +1,202 @@
+{
+    "nodes": {
+        "hmi": {
+            "name": "hmi",
+            "status": "hmi_node_status",
+            "rgb":{
+                "status": "rgb_led_status"
+            },
+            "keypad":{
+                "status": "keypad_status"
+            },
+            "buzzer":{
+                "status": "buzzer_status"
+            },
+            "eeprom":{
+                "status": "eeprom_status"
+            },
+            "system":{
+                "status": "system_status"
+            },
+            "display":{
+                "status": "display_status"
+            }
+        },
+        "sns": {
+            "name": "sensor",
+            "status": "sensor_node_status",
+            "temperature":{
+                "value": "temperature",
+                "status": "dht_sensor_status",
+                "possible":{
+                    "min":{
+                        "value": "temperature_possible_min"
+                    },
+                    "max":{
+                        "value": "temperature_possible_max"
+                    }
+                },
+                "target":{
+                    "min": {
+                        "value": "temperature_target_min"
+                    },
+                    "max":{
+                        "value": "temperature_target_max"
+                    }
+                }
+            },
+            "humidity":{
+                "value": "humidity",
+                "status": "dht_sensor_status",
+                "possible":{
+                    "min":{
+                        "value": "humidity_possible_min"
+                    },
+                    "max":{
+                        "value": "humidity_possible_max"
+                    }
+                },
+                "target":{
+                    "min": {
+                        "value": "humidity_target_min"
+                    },
+                    "max":{
+                        "value": "humidity_target_max"
+                    }
+                }
+            },
+            "light":{
+                "value": "light_intensity",
+                "status": "ldr_sensor_status",
+                "target":{
+                    "min":{
+                        "value": "light_intensity_target_min"
+                    },
+                    "max":{
+                        "value": "light_intensity_target_max"
+                    }
+                }
+            },
+            "flow":{
+                "value": "flow_rate",
+                "status": "flow_meter_sensor_status"
+            },
+            "moisture":{
+                "value": "soil_moisture",
+                "status": "soil_moisture_sensor_status",
+                "target":{
+                    "min":{
+                        "value": "soil_moisture_target_min"
+                    },
+                    "max":{
+                        "value": "soil_moisture_target_max"
+                    }
+                }                
+            },
+            "water":{
+                "value": "water_level",
+                "status": "water_level_sensor_status",
+                "target":{
+                    "min":{
+                        "value": "water_level_target_min"
+                    },
+                    "max":{
+                        "value": "water_level_target_max"
+                    }
+                },
+                "consumedtarget":{
+                    "max":{
+                        "value": "water_consumed_target_max"
+                    }
+                },
+                "time":{
+                    "max":{
+                        "value": "watering_time_max"
+                    }
+                }
+            }
+        },
+        "act": {
+            "name": "actuator",
+            "status": "actuator_node_status",
+            "fans":{
+                "state": "fans_state",
+                "status": "fans_status",
+                "manual":{
+                    "state": "fans_manual_state"
+                } 
+            },
+            "lamp":{
+                "value": "lamp_brightness",
+                "status": "lamp_status",
+                "manual": {
+                    "value": "lamp_manual_brightness"
+                }
+            },
+            "heater":{
+                "state": "heater_state",
+                "status": "heater_status",
+                "manual": {
+                    "state": "heater_manual_state"
+                }                
+            },
+            "waterpump":{
+                "state": "water_pump_state",
+                "status": "water_pump_status",
+                "manual": {
+                    "state": "water_pump_manual_state"
+                }
+            },
+            "watervalve":{
+                "state": "water_valve_state",
+                "status": "water_valve_status",
+                "manual": {
+                    "state": "water_valve_manual_state"
+                }
+            },
+            "window":{
+                "state": "window_state",
+                "status": "window_status",
+                "manual": {
+                    "state": "window_manual_state"
+                }
+            }
+        },
+        "com": {
+            "name": "communication",
+            "status": "com_node_status",
+            "rtc": {
+                "status": "rtc_status",
+                "year":{
+                    "value": "rtc_year" 
+                },
+                "month": {
+                    "value": "rtc_month"
+                },
+                "day": {
+                    "value": "rtc_day"
+                },
+                "hour": {
+                    "value": "rtc_hour"
+                },
+                "minute": {
+                    "value": "rtc_minute"
+                },
+                "second": {
+                    "value": "rtc_second"
+                }
+                
+            },
+            "esp32": {
+                "status": "esp32_status"
+            },
+            "sdcard": {
+                "value": "sdcard_free_space",
+                "status": "sdcard_status"
+            },
+            "terminal": {
+                "status": "terminal_status"
+            }
+        }
+    }    
+}
