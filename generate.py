@@ -139,10 +139,10 @@ if ESP32_INCLUDE_DIR != None:
 
 if node == "com" and mode == "prod":
     write_file(Path(TEENSY_CANBUS_DIR, 'candata.h'),
-               candata.get_candata_header(nodes))
+               candata.get_candata_header(nodes, messages[:]))
     
     write_file(Path(TEENSY_CANBUS_DIR, 'candata.cpp'),
-               candata.get_candata_source(nodes))
+               candata.get_candata_source(nodes, messages[:]))
 
     write_file(Path(ESP32_INCLUDE_DIR, 'topics.h'),
                topics.get_topics(nodes))
