@@ -28,21 +28,30 @@ def inside_struct(struct_member, struct_name):
    text = \
 f"""
     struct{{
-    {struct_member}
+{struct_member}
     }} {struct_name};
     """
    return text
 
 def inside_inside_struct(struct_member, struct_name):
-   text = f"""\
-    struct{{
-        {struct_member}
+   text = \
+f"""
+        struct{{
+{struct_member}\
         }} {struct_name};
-    """
+        """
    return text
 
 def canbus_get(struct, get_signal):
     return f"\t{struct} = canbus_get_{get_signal}();\n"
+
+def canbus_is(struct, get_signal, key):
+    if key == "enabled":
+        if "state" in get_signal:
+            get_signal = get_signal.replace(get_signal[len(get_signal) - 5:], "mode")
+        else:
+            get_signal = get_signal + "_mode"
+    return f"\t{struct} = canbus_is_{get_signal}_{key}();\n"
 
 def get_payloads_value(type_define, struct):
     return f'\tsprintf(payloads + strlen(payloads), "%{type_define}|", {struct});\n\n'
@@ -79,22 +88,33 @@ def get_payloads_state(struct):
 """
     return text
 
-def loop_through_json(messages, name):
+def loop_through_json_get_type(messages, signal_name, key):
     for message in messages:
         for signal in message['signals']:
-            if signal.get("name") == name:
+            if key == "enabled" or key == "valid" or key == "updated":
+                name_type = "bool"
+                break
+            elif signal.get("name") == signal_name:
+                name_type = signal.get("type")
+                break
+    return name_type
+
+def loop_through_json_check(messages, name):
+    for message in messages:
+        for signal in message['signals']:
+            if signal.get("name") in signal:
                 name_type = signal.get("type")
                 break
     return name_type
     
 def get_candata_header(nodes, messages):
-    text = ""
     data_members = ""
     functions = ""
     node_members = ""
     signal_struct = ""
     signal_members = ""
     inside_struct_members=""
+    insert_inside_struct_members =""
     node_struct = ""
     for node in nodes.values():
         name = node.get("name")
@@ -102,7 +122,7 @@ def get_candata_header(nodes, messages):
         for key_signal, value_signal in node.items():
             if type(value_signal) is not dict:
                 if key_signal != "name":
-                    name_type = loop_through_json(messages, value_signal)
+                    name_type = loop_through_json_get_type(messages, value_signal, key_signal)
                     node_members += f"\t{name_type} {key_signal};\n"
             else:
                 functions += get_text(key_signal)
@@ -110,19 +130,21 @@ def get_candata_header(nodes, messages):
                 node_members += f"\t{key_signal}_t {key_signal};\n"
                 for key_inside_signal, value_inside_signal in value_signal.items():
                     if type(value_inside_signal) is not dict:
-                        name_type = loop_through_json(messages, value_inside_signal)
+                        name_type = loop_through_json_get_type(messages, value_inside_signal, key_inside_signal)
                         signal_members += f"\t{name_type} {key_inside_signal};\n"
                     else:
                         for min_max, value_min_max in value_inside_signal.items():
                             if type(value_min_max) is not dict:
-                                name_type = loop_through_json(messages, value_min_max)
-                                inside_struct_members += f"\t{name_type} {min_max};\n"
+                                name_type = loop_through_json_get_type(messages, value_min_max, min_max)
+                                inside_struct_members += f"\t\t{name_type} {min_max};\n"
                             else:
                                 for key_inside_min_max, value_inside_min_max in value_min_max.items():
                                     if type(value_inside_min_max) is not dict:
-                                        name_type = loop_through_json(messages, value_inside_min_max)
-                                        insert_inside_struct = inside_inside_struct(f"\t{name_type} {key_inside_min_max};", min_max)
-                                        inside_struct_members += f"{insert_inside_struct}"
+                                        name_type = loop_through_json_get_type(messages, value_inside_min_max, key_inside_min_max)
+                                        insert_inside_struct_members += f"\t\t\t{name_type} {key_inside_min_max};\n"
+                                insert_inside_struct = inside_inside_struct(insert_inside_struct_members, min_max)
+                                insert_inside_struct_members =""
+                                inside_struct_members += f"{insert_inside_struct}"
                         signal_members += inside_struct(inside_struct_members[:-1], key_inside_signal)
                         inside_struct_members = ''
                 signal_struct += struct(signal_members[:-1], key_signal)
@@ -171,7 +193,7 @@ def get_candata_source(nodes, messages):
                         payloads_functions_state += get_payloads_state(f"data.{name}.{key_signal}")
                     else:
                         if value_signal == "temperature":
-                            payloads_functions_value += get_payloads_value("0.1f C", f"data.{name}.{key_signal}")
+                            payloads_functions_value += get_payloads_value("0.1f", f"data.{name}.{key_signal}")
                         else:
                             payloads_functions_value += get_payloads_value("u", f"data.{name}.{key_signal}")
             else:   
@@ -184,13 +206,16 @@ def get_candata_source(nodes, messages):
                             payloads_functions_state += get_payloads_state(f"data.{name}.{key_signal}.{key_inside_signal}")
                         else:
                             if value_inside_signal == "temperature":
-                                payloads_functions_value += get_payloads_value("0.1f C", f"data.{name}.{key_signal}.{key_inside_signal}")
+                                payloads_functions_value += get_payloads_value("0.1f", f"data.{name}.{key_signal}.{key_inside_signal}")
                             else:
                                 payloads_functions_value += get_payloads_value("u", f"data.{name}.{key_signal}.{key_inside_signal}")
                     else:
                         for min_max, value_min_max in value_inside_signal.items():
                             if type(value_min_max) is not dict:
-                                get_functions += canbus_get(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}", value_min_max)
+                                if min_max == "updated" or min_max == "valid" or min_max == "enabled":
+                                    get_functions += canbus_is(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}", value_min_max, min_max)
+                                else:    
+                                    get_functions += canbus_get(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}", value_min_max)
                                 if min_max == "status":
                                     payloads_functions_status += get_payloads_status(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}")
                                 elif min_max == "state":
@@ -198,13 +223,16 @@ def get_candata_source(nodes, messages):
                                 else:
                                     if value_min_max == "temperature":
                                         payloads_functions_value += get_payloads_value(
-                                            "0.1f C", f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}")
+                                            "0.1f", f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}")
                                     else:
                                         payloads_functions_value += get_payloads_value("u", f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}")
                             else:
                                 for key_inside_min_max, value_inside_min_max in value_min_max.items():
                                     if type(value_inside_min_max) is not dict:
-                                        get_functions += canbus_get(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}.{key_inside_min_max}", value_inside_min_max)
+                                        if key_inside_min_max == "updated" or key_inside_min_max == "valid" or key_inside_min_max == "enabled":
+                                            get_functions += canbus_is(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}.{key_inside_min_max}", value_inside_min_max, key_inside_min_max)
+                                        else:
+                                            get_functions += canbus_get(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}.{key_inside_min_max}", value_inside_min_max)
                                         if key_inside_min_max == "status":
                                             payloads_functions_status += get_payloads_status(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}.{key_inside_min_max}")
                                         elif key_inside_min_max == "state":
