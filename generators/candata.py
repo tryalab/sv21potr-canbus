@@ -159,7 +159,7 @@ def get_candata_header(nodes, messages):
 #define CANDATA_H
 
 #include <stdint.h>
-#define PAYLOAD_LENGTH (768U)
+#define PAYLOADS_LENGTH (768U)
 
     {signal_struct}
     {node_struct}
