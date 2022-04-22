@@ -225,7 +225,7 @@ def generate_can_service_run(node, mode, messages):
                 static uint8_t counter = 0;
 
                 const uint8_t tx_index[{0}] = {{{1}}};
-                for (uint8_t i = 0; i < {0}, i++)
+                for (uint8_t i = 0; i < {0}; i++)
                 {{
                     Can0.write(messages[tx_index[i]]);
                 }}
