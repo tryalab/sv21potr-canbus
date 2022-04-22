@@ -46,7 +46,7 @@ char topics[TOPICS_TOTAL][TOPICS_LENGTH] ={{
 """
     return text_total
 
-def get_teensy_common_header(node, nodes, messages):
+def get_teensy_common_header(node, messages):
     macros = ''
     values = []
     name_list = []
@@ -65,9 +65,6 @@ def get_teensy_common_header(node, nodes, messages):
                                 if name not in name_list:
                                     name_list.append(name)
                                     macros += f"#define {name} {index}\n"
-    
-    if node == "com":
-        macros += get_topics(nodes)
 
     header_content = f"""\
 #ifndef COMMON_H
@@ -79,10 +76,11 @@ def get_teensy_common_header(node, nodes, messages):
     return header_content
 
 
-def get_esp32_common_header(defines):
+def get_esp32_common_header(defines, nodes):
     macros = ''
     for index, name in enumerate(defines.get('esp32')):
         macros += f"#define {name} {index}\n"
+    macros += get_topics(nodes)
 
     header_esp32 = f"""\
 #ifndef COMMON_H

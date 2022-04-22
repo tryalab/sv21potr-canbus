@@ -114,14 +114,14 @@ write_file(Path(TEENSY_CANBUS_DIR, 'canbus.cpp'),
            canbus.get_canbus_source(node, mode, messages[:]))
 
 write_file(Path(TEENSY_INCLUDE_DIR, 'common.h'),
-           common.get_teensy_common_header(node, nodes, messages[:]))
+           common.get_teensy_common_header(node, messages[:]))
 
 write_file(Path(TEENSY_CANBUS_DIR, 'signals.txt'),
            signals.get_json_txt(node, messages[:]))
 
 if ESP32_INCLUDE_DIR != None:
     write_file(Path(ESP32_INCLUDE_DIR, 'common.h'),
-               common.get_esp32_common_header(defines))
+               common.get_esp32_common_header(defines, nodes))
 
 if node == "com":
     write_file(Path(TEENSY_CANBUS_DIR, 'candata.h'),

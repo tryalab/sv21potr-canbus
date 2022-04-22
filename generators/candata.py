@@ -2,11 +2,11 @@ def get_text(name):
    text = f"void get_{name}_text(char *text, {name}_t {name});\n"
    return text
 
-def get_text_function(name):
+def get_text_function(name, insert_text, get_struct):
    text = \
 f"""void get_{name}_text(char *text, {name}_t {name})
 {{
-    sprintf(text, "{name} (status: , state: , range: , possible: , target: )")
+    sprintf(text, "{name.capitalize()}({insert_text})", {get_struct});
 }}
 """
    return text
@@ -161,9 +161,10 @@ def get_candata_header(nodes, messages):
 #include <stdint.h>
 #define PAYLOAD_LENGTH (768U)
 
-    {data_struct}
-    {node_struct}
     {signal_struct}
+    {node_struct}
+    {data_struct}
+    
 data_t get_candata(void);
 
 void get_payloads(char *payloads);
@@ -180,6 +181,9 @@ def get_candata_source(nodes, messages):
     payloads_functions_value = ""
     payloads_functions_state = ""
     payloads_functions_status = ""
+    text_function = ""
+    insert_key_inside = ""
+    struct_text =""
 
     for node in nodes.values():
         name = node.get("name")
@@ -199,19 +203,25 @@ def get_candata_source(nodes, messages):
             else:   
                 for key_inside_signal, value_inside_signal in value_signal.items():
                     if type(value_inside_signal) is not dict:
-                        get_functions += canbus_get(f"data.{name}.{key_signal}.{key_inside_signal}", value_inside_signal)
+                        struct = f"data.{name}.{key_signal}.{key_inside_signal}"
+                        struct_text += f"{key_signal}.{key_inside_signal}, "
+                        insert_key_inside += f"{key_inside_signal}: %d, "
+                        get_functions += canbus_get(struct, value_inside_signal)
                         if key_inside_signal == "status":
-                            payloads_functions_status += get_payloads_status(f"data.{name}.{key_signal}.{key_inside_signal}")
+                            payloads_functions_status += get_payloads_status(struct)
                         elif key_inside_signal == "state":
-                            payloads_functions_state += get_payloads_state(f"data.{name}.{key_signal}.{key_inside_signal}")
+                            payloads_functions_state += get_payloads_state(struct)
                         else:
                             if value_inside_signal == "temperature":
-                                payloads_functions_value += get_payloads_value("0.1f", f"data.{name}.{key_signal}.{key_inside_signal}")
+                                payloads_functions_value += get_payloads_value("0.1f", struct)
                             else:
-                                payloads_functions_value += get_payloads_value("u", f"data.{name}.{key_signal}.{key_inside_signal}")
+                                payloads_functions_value += get_payloads_value("u", struct)
+                        
                     else:
+                        insert_key_inside += f"{key_inside_signal}: %d, "
                         for min_max, value_min_max in value_inside_signal.items():
                             if type(value_min_max) is not dict:
+                                struct_text += f"{key_signal}.{key_inside_signal}.{min_max}, "
                                 if min_max == "updated" or min_max == "valid" or min_max == "enabled":
                                     get_functions += canbus_is(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}", value_min_max, min_max)
                                 else:    
@@ -242,6 +252,15 @@ def get_candata_source(nodes, messages):
                                                 payloads_functions_value += get_payloads_value("0.1f C", f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}.{key_inside_min_max}")
                                             else:
                                                 payloads_functions_value += get_payloads_value("u", f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}.{key_inside_min_max}")
+                start = len(insert_key_inside) - 2
+                stop = start + 2
+                insert_key_inside = insert_key_inside[0:start:] + insert_key_inside[stop::]
+                start = len(struct_text) - 2
+                stop = start + 2
+                struct_text = struct_text[0:start:] + struct_text[stop::]
+                text_function += get_text_function(key_signal, insert_key_inside, struct_text)
+                insert_key_inside = ""
+                struct_text = ""
     text = \
 f"""                         
 #include <stdio.h>         
@@ -254,7 +273,8 @@ data_t get_candata(void)
 {{
 \tdata_t data;
 
-{get_functions[:-1]} 
+{get_functions[:-1]}
+\treturn data;
 }}
 
 void get_payloads(char *payloads)
@@ -263,7 +283,8 @@ void get_payloads(char *payloads)
 
 {payloads_functions_status}
 {payloads_functions_state}
-{payloads_functions_value}
+{payloads_functions_value}\
 }}
+{text_function}
 """
     return text
