@@ -309,6 +309,8 @@ def get_canbus_source(node, mode, messages):
                                 set += set_test_min_max_function(name, type, valid, if_float_multiply, index, start, length)
                             elif 'update' in signal:
                                 set += set_test_update_function(name, type, valid, if_float_multiply, index, start, length)
+                            elif 'control' in signal:
+                                set += control_test_set_function(replace_name, control_write_function)
                             else:
                                 set += set_test_function(name, type, valid, if_float_multiply, index, start, length)
                     
@@ -316,8 +318,6 @@ def get_canbus_source(node, mode, messages):
                         control_bit += update_function(name, control_bit_read_function)
                     elif 'control' in signal:
                         control_bit += control_function(replace_name, control_bit_read_function)
-                        if mode == 'dev':
-                            set += control_test_set_function(replace_name, control_write_function)
                     elif 'calibration' in signal:
                         control_bit += calibration_function(name, control_bit_read_function)
 
@@ -483,14 +483,15 @@ def get_canbus_header(node, mode, messages):
                     get += get_header(comment, description, name, type)
                     if message['setter'] != node:
                         if mode == 'dev':
-                            set += set_test_double_header(comment, description, name, type)
+                            if 'control' in signal:
+                                set += set_test_control_header(name, replace_name)
+                            else:
+                                set += set_test_double_header(comment, description, name, type)
 
                     if 'update' in signal:
                         control_bit += update_header(comment, name)
                     elif 'control' in signal:
                         control_bit += control_header(name, replace_name)
-                        if mode == 'dev':
-                            set += set_test_control_header(name, replace_name)
                     elif 'calibration' in signal:
                         control_bit += calibration_header(comment, name)
 
