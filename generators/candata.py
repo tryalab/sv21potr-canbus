@@ -74,39 +74,102 @@ def get_payloads_status(struct):
 """
     return text
 
-def get_payloads_state(struct):
+def get_payloads_status_system(struct):
     text = f"""\
-    if ({struct} == ON)
+    switch({struct})
     {{
-        sprintf(payloads + strlen(payloads), "%s|", "ON");
+    case WARNING:
+        sprintf(payloads + strlen(payloads), "%s|", "WARNING");
+        break;
+    case OKAY:
+        sprintf(payloads + strlen(payloads), "%s|", "OKAY");
+        break;
+    default:
+        sprintf(payloads + strlen(payloads), "%s|", "ERROR");
+        break;
     }}
-    else
-    {{
-        sprintf(payloads + strlen(payloads), "%s|", "OFF");
-    }}
-    
+
 """
     return text
 
-def loop_through_json_get_type(messages, signal_name, key):
+def get_functions_payloads(messages, struct, value, key):
+    get_functions = ""
+    get_payloads = ""
+    get_type, get_values = loop_through_json_get_type_values(messages, value, key)
+    if get_type == "bool":
+        get_functions += canbus_is(struct, value, key)
+        get_payloads += get_payloads_is(struct)
+    else:
+        get_functions += canbus_get(struct, value)
+
+        if get_values == ['UNINITIALIZED', 'OKAY', 'ERROR']:
+            get_payloads += get_payloads_status(struct)
+        elif get_values == ['WARNING', 'OKAY', 'ERROR']:
+            get_payloads += get_payloads_status_system(struct)
+        elif get_values == ['UNINITIALIZED', 'OKAY', 'I2C_ERROR', 'WIFI_ERROR', 'NTP_ERROR', 'MQTT_ERROR']:
+            get_payloads += get_payloads_status_esp32(struct)
+        elif get_values == ['OFF', 'ON']:
+            get_payloads += get_payloads_state(struct)
+        elif get_values == ['CLSD', 'OPNND']:
+            get_payloads += get_payloads_vlvwin(struct)
+        else:
+            if get_type == "float":
+                typespec = "0.1f"
+            else:
+                typespec = "u"
+            get_payloads += get_payloads_value(typespec, struct)
+    return get_functions, get_payloads
+
+def get_payloads_status_esp32(struct):
+    text = f"""\
+    switch({struct})
+    {{
+    case UNINITIALIZED:
+        sprintf(payloads + strlen(payloads), "%s|", "UNINITIALIZED");
+        break;
+    case OKAY:
+        sprintf(payloads + strlen(payloads), "%s|", "OKAY");
+        break;
+    case I2C_ERROR:
+        sprintf(payloads + strlen(payloads), "%s|", "I2C_ERROR");
+        break;
+    case WIFI_ERROR:
+        sprintf(payloads + strlen(payloads), "%s|", "WIFI_ERROR");
+        break;
+    case NTP_ERROR:
+        sprintf(payloads + strlen(payloads), "%s|", "NTP_ERROR");
+        break;
+    default:
+        sprintf(payloads + strlen(payloads), "%s|", "MQTT_ERROR");
+        break;
+    }}
+
+"""
+    return text
+
+def get_payloads_state(struct):
+    return f'\tsprintf(payloads + strlen(payloads), "%s|", {struct} == ON ? "ON" : "OFF");\n\n'
+
+def get_payloads_vlvwin(struct):
+    return f'\tsprintf(payloads + strlen(payloads), "%s|", {struct} == CLSD ? "CLSD" : "OPNND");\n\n'
+
+def get_payloads_is(struct):
+    return f'\tsprintf(payloads + strlen(payloads), "%s|", {struct} ? "TRUE" : "FALSE");\n\n'
+
+def loop_through_json_get_type_values(messages, value, key):
+    values = ""
     for message in messages:
         for signal in message['signals']:
             if key == "enabled" or key == "valid" or key == "updated":
                 name_type = "bool"
                 break
-            elif signal.get("name") == signal_name:
+            elif signal.get("name") == value:
                 name_type = signal.get("type")
+                if "values" in signal:
+                    values = signal["values"]
                 break
-    return name_type
+    return name_type, values
 
-def loop_through_json_check(messages, name):
-    for message in messages:
-        for signal in message['signals']:
-            if signal.get("name") in signal:
-                name_type = signal.get("type")
-                break
-    return name_type
-    
 def get_candata_header(nodes, messages):
     data_members = ""
     functions = ""
@@ -122,7 +185,7 @@ def get_candata_header(nodes, messages):
         for key_signal, value_signal in node.items():
             if type(value_signal) is not dict:
                 if key_signal != "name":
-                    name_type = loop_through_json_get_type(messages, value_signal, key_signal)
+                    name_type, _ = loop_through_json_get_type_values(messages, value_signal, key_signal)
                     node_members += f"\t{name_type} {key_signal};\n"
             else:
                 functions += get_text(key_signal)
@@ -130,17 +193,17 @@ def get_candata_header(nodes, messages):
                 node_members += f"\t{key_signal}_t {key_signal};\n"
                 for key_inside_signal, value_inside_signal in value_signal.items():
                     if type(value_inside_signal) is not dict:
-                        name_type = loop_through_json_get_type(messages, value_inside_signal, key_inside_signal)
+                        name_type, _ = loop_through_json_get_type_values(messages, value_inside_signal, key_inside_signal)
                         signal_members += f"\t{name_type} {key_inside_signal};\n"
                     else:
                         for min_max, value_min_max in value_inside_signal.items():
                             if type(value_min_max) is not dict:
-                                name_type = loop_through_json_get_type(messages, value_min_max, min_max)
+                                name_type, _ = loop_through_json_get_type_values(messages, value_min_max, min_max)
                                 inside_struct_members += f"\t\t{name_type} {min_max};\n"
                             else:
                                 for key_inside_min_max, value_inside_min_max in value_min_max.items():
                                     if type(value_inside_min_max) is not dict:
-                                        name_type = loop_through_json_get_type(messages, value_inside_min_max, key_inside_min_max)
+                                        name_type, _ = loop_through_json_get_type_values(messages, value_inside_min_max, key_inside_min_max)
                                         insert_inside_struct_members += f"\t\t\t{name_type} {key_inside_min_max};\n"
                                 insert_inside_struct = inside_inside_struct(insert_inside_struct_members, min_max)
                                 insert_inside_struct_members =""
@@ -178,11 +241,9 @@ void get_payloads(char *payloads);
 def get_candata_source(nodes, messages):
 
     get_functions = ""
-    payloads_functions_value = ""
-    payloads_functions_state = ""
-    payloads_functions_status = ""
+    payloads_functions = ""
     text_function = ""
-    insert_key_inside = ""
+    insert_inside = ""
     struct_text =""
 
     for node in nodes.values():
@@ -190,76 +251,44 @@ def get_candata_source(nodes, messages):
         for key_signal, value_signal in node.items():
             if type(value_signal) is not dict:
                 if key_signal != "name":
-                    get_functions += canbus_get(f"data.{name}.{key_signal}", value_signal)
-                    if key_signal == "status":
-                        payloads_functions_status += get_payloads_status(f"data.{name}.{key_signal}")
-                    elif key_signal == "state":
-                        payloads_functions_state += get_payloads_state(f"data.{name}.{key_signal}")
-                    else:
-                        if value_signal == "temperature":
-                            payloads_functions_value += get_payloads_value("0.1f", f"data.{name}.{key_signal}")
-                        else:
-                            payloads_functions_value += get_payloads_value("u", f"data.{name}.{key_signal}")
-            else:   
+                    struct = f"data.{name}.{key_signal}"
+                    get_function, payloads_function = get_functions_payloads(messages, struct, value_signal, key_signal)
+                    get_functions += get_function
+                    payloads_functions += payloads_function
+            else:
                 for key_inside_signal, value_inside_signal in value_signal.items():
                     if type(value_inside_signal) is not dict:
+                        insert_inside += f"{key_inside_signal}: %d, "
                         struct = f"data.{name}.{key_signal}.{key_inside_signal}"
-                        struct_text += f"{key_signal}.{key_inside_signal}, "
-                        insert_key_inside += f"{key_inside_signal}: %d, "
-                        get_functions += canbus_get(struct, value_inside_signal)
-                        if key_inside_signal == "status":
-                            payloads_functions_status += get_payloads_status(struct)
-                        elif key_inside_signal == "state":
-                            payloads_functions_state += get_payloads_state(struct)
-                        else:
-                            if value_inside_signal == "temperature":
-                                payloads_functions_value += get_payloads_value("0.1f", struct)
-                            else:
-                                payloads_functions_value += get_payloads_value("u", struct)
-                        
+                        get_function, payloads_function = get_functions_payloads(messages, struct, value_inside_signal, key_inside_signal)    
+                        get_functions += get_function
+                        payloads_functions += payloads_function
                     else:
-                        insert_key_inside += f"{key_inside_signal}: %d, "
-                        for min_max, value_min_max in value_inside_signal.items():
+                        insert_inside += f"{key_inside_signal}: %d, "
+                        for key_min_max, value_min_max in value_inside_signal.items():
                             if type(value_min_max) is not dict:
-                                struct_text += f"{key_signal}.{key_inside_signal}.{min_max}, "
-                                if min_max == "updated" or min_max == "valid" or min_max == "enabled":
-                                    get_functions += canbus_is(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}", value_min_max, min_max)
-                                else:    
-                                    get_functions += canbus_get(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}", value_min_max)
-                                if min_max == "status":
-                                    payloads_functions_status += get_payloads_status(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}")
-                                elif min_max == "state":
-                                    payloads_functions_state += get_payloads_state(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}")
-                                else:
-                                    if value_min_max == "temperature":
-                                        payloads_functions_value += get_payloads_value(
-                                            "0.1f", f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}")
-                                    else:
-                                        payloads_functions_value += get_payloads_value("u", f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}")
+                                struct = f"data.{name}.{key_signal}.{key_inside_signal}.{key_min_max}"
+                                struct_text += f"{key_signal}.{key_inside_signal}.{key_min_max}, "
+                                get_function, payloads_function = get_functions_payloads(messages, struct, value_min_max, key_min_max)
+                                get_functions += get_function
+                                payloads_functions += payloads_function
                             else:
                                 for key_inside_min_max, value_inside_min_max in value_min_max.items():
                                     if type(value_inside_min_max) is not dict:
-                                        if key_inside_min_max == "updated" or key_inside_min_max == "valid" or key_inside_min_max == "enabled":
-                                            get_functions += canbus_is(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}.{key_inside_min_max}", value_inside_min_max, key_inside_min_max)
-                                        else:
-                                            get_functions += canbus_get(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}.{key_inside_min_max}", value_inside_min_max)
-                                        if key_inside_min_max == "status":
-                                            payloads_functions_status += get_payloads_status(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}.{key_inside_min_max}")
-                                        elif key_inside_min_max == "state":
-                                            payloads_functions_state += get_payloads_state(f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}.{key_inside_min_max}")
-                                        else:
-                                            if value_inside_min_max == "temperature":
-                                                payloads_functions_value += get_payloads_value("0.1f C", f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}.{key_inside_min_max}")
-                                            else:
-                                                payloads_functions_value += get_payloads_value("u", f"data.{name}.{key_signal}.{key_inside_signal}.{min_max}.{key_inside_min_max}")
-                start = len(insert_key_inside) - 2
+                                        struct = f"data.{name}.{key_signal}.{key_inside_signal}.{key_min_max}.{key_inside_min_max}"
+                                        get_function, payloads_function = get_functions_payloads(messages, struct, value_inside_min_max, key_inside_min_max)
+                                        get_functions += get_function
+                                        payloads_functions += payloads_function
+                start = len(insert_inside) - 2
                 stop = start + 2
-                insert_key_inside = insert_key_inside[0:start:] + insert_key_inside[stop::]
+                insert_inside = insert_inside[0:start:] + insert_inside[stop::]
+
                 start = len(struct_text) - 2
                 stop = start + 2
                 struct_text = struct_text[0:start:] + struct_text[stop::]
-                text_function += get_text_function(key_signal, insert_key_inside, struct_text)
-                insert_key_inside = ""
+                text_function += get_text_function(key_signal, insert_inside, struct_text)
+
+                insert_inside = ""
                 struct_text = ""
     text = \
 f"""                         
@@ -281,9 +310,7 @@ void get_payloads(char *payloads)
 {{
 \tdata_t data = get_candata();
 
-{payloads_functions_status}
-{payloads_functions_state}
-{payloads_functions_value}\
+{payloads_functions}\
 }}
 {text_function}
 """
