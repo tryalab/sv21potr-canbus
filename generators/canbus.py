@@ -286,7 +286,7 @@ def get_canbus_source(node, mode, messages):
                     else:
                         replace_name = name + "_mode"
 
-                # generate setters, getters and control bit functions
+                # generate setters, getters and control bit functions.
                 if message['setter'] == node:
                     if 'control' in signal:
                         control_bit += control_set_function(replace_name, control_write_function)
