@@ -4,14 +4,12 @@ def set_function(name, type, valid, if_float_multiply, index, start, length):
 bool canbus_set_{name}({type} value)
 {{
     bool status = false;
-
     if ({valid})
     {{\
         {if_float_multiply}
         can_signal_write({index}, {start}, {length}, (uint64_t)value);
         status = true;
     }}
-
     return status;
 }}
               """
@@ -23,14 +21,12 @@ def set_test_function(name, type, valid, if_float_multiply, index, start, length
 bool canbus_test_set_{name}({type} value)
 {{
     bool status = false;
-
     if ({valid})
     {{\
         {if_float_multiply}
         can_signal_write({index}, {start}, {length}, (uint64_t)value);
         status = true;
     }}
-
     return status;
 }}
               """
@@ -64,13 +60,11 @@ bool canbus_is_{name}_updated(void)
     bool status = false;
     static uint8_t previous_value = 0;
     uint8_t value = {control_bit_function};
-
     if(previous_value != value)
     {{
         previous_value = value;
         status = true;
     }}
-
     return status;
 }}
               """
@@ -142,7 +136,6 @@ bool canbus_set_{name}({type} value)
         can_signal_write({index}, {start + length}, 1, (uint64_t)update);
         status = true;
     }}
-
     return status;
 }}
               """
@@ -164,7 +157,6 @@ bool canbus_test_set_{name}({type} value)
         can_signal_write({index}, {start + length}, 1, (uint64_t)update);
         status = true;
     }}
-
     return status;
 }}
               """
@@ -177,7 +169,6 @@ def set_min_max_function(name, type, valid, if_float_multiply, index, start, len
 bool canbus_set_{name}({type} value)
 {{
     bool status = false;
-
     if ({valid})
     {{\
         {if_float_multiply}
@@ -185,7 +176,6 @@ bool canbus_set_{name}({type} value)
         can_signal_write({index}, {start + length}, 1, 1);
         status = true;
     }}
-
     return status;
 }}
               """
@@ -198,7 +188,6 @@ def set_test_min_max_function(name, type, valid, if_float_multiply, index, start
 bool canbus_test_set_{name}({type} value)
 {{
     bool status = false;
-
     if ({valid})
     {{\
         {if_float_multiply}
@@ -206,7 +195,6 @@ bool canbus_test_set_{name}({type} value)
         can_signal_write({index}, {start + length}, 1, 1);
         status = true;
     }}
-
     return status;
 }}
               """
@@ -214,14 +202,12 @@ bool canbus_test_set_{name}({type} value)
 
 def convert_function():
     text = """ 
-
 static int64_t convert(uint64_t value, uint8_t length)
 {
     if (value & (1ULL << (length - 1)))
     {
         value |= (~0ULL << length);
     }
-
     return (int64_t)value;
 }"""
     return text
@@ -268,7 +254,7 @@ def get_canbus_source(node, mode, messages):
                     else:
                         valid = f"value <= {high_boundary}"
 
-                    # if negative value in range use convert function
+                    # if negative value in range use convert function.
                     if signal['range'][0] < 0:
                         return_text = f"return ({type})convert(can_signal_read({index}, {start}, {length}), {length}){if_float_devide};"
                         convert = convert_function()
@@ -305,12 +291,12 @@ def get_canbus_source(node, mode, messages):
                     get += get_function(name, type, return_text)
                     if message['setter'] != node:
                         if mode == 'dev':
+                            if 'control' in signal:
+                                set += control_test_set_function(replace_name, control_write_function)
                             if 'calibration' in signal:
                                 set += set_test_min_max_function(name, type, valid, if_float_multiply, index, start, length)
                             elif 'update' in signal:
                                 set += set_test_update_function(name, type, valid, if_float_multiply, index, start, length)
-                            elif 'control' in signal:
-                                set += control_test_set_function(replace_name, control_write_function)
                             else:
                                 set += set_test_function(name, type, valid, if_float_multiply, index, start, length)
                     
@@ -483,22 +469,20 @@ def get_canbus_header(node, mode, messages):
                     get += get_header(comment, description, name, type)
                     if message['setter'] != node:
                         if mode == 'dev':
-                            if 'control' in signal:
-                                set += set_test_control_header(name, replace_name)
-                            else:
-                                set += set_test_double_header(comment, description, name, type)
+                            set += set_test_double_header(comment, description, name, type)
 
                     if 'update' in signal:
                         control_bit += update_header(comment, name)
                     elif 'control' in signal:
                         control_bit += control_header(name, replace_name)
+                        if mode == 'dev':
+                            set += set_test_control_header(name, replace_name)
                     elif 'calibration' in signal:
                         control_bit += calibration_header(comment, name)
 
     text = f"""\
 #ifndef CANBUS_H
 #define CANBUS_H
-
 #include <stdint.h>
 #include <stdbool.h>
 {set}
