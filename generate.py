@@ -7,7 +7,7 @@ from generators import service
 from generators import common
 from generators import canbus
 from generators import signals
-
+from generators import candata
 
 ROOT = Path(__file__).parent
 
@@ -26,7 +26,6 @@ try:
 except:
     print("Failed to open the json file")
     exit(1)
-
 
 def print_arg_error():
     print("Error...")
@@ -81,6 +80,8 @@ def write_file(file_name, content):
         print("Failed to write to {}".format(file_name))
         exit(4)
 
+nodes = data['nodes']
+del data['nodes']
 
 defines = data['defines']
 del data['defines']
@@ -120,4 +121,11 @@ write_file(Path(TEENSY_CANBUS_DIR, 'signals.txt'),
 
 if ESP32_INCLUDE_DIR != None:
     write_file(Path(ESP32_INCLUDE_DIR, 'common.h'),
-               common.get_esp32_common_header(defines))
+               common.get_esp32_common_header(defines, nodes))
+
+if node == "com":
+    write_file(Path(TEENSY_CANBUS_DIR, 'candata.h'),
+               candata.get_candata_header(nodes, messages[:]))
+    
+    write_file(Path(TEENSY_CANBUS_DIR, 'candata.cpp'),
+               candata.get_candata_source(nodes, messages[:]))
