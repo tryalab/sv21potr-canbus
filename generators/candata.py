@@ -94,7 +94,7 @@ def get_payloads_status_system(struct):
 
 def get_string_functions():
     return """\
-static const char *get_status_string(uint8_t status)
+static char *get_status_string(uint8_t status)
 {
     char *status_text = "UNINITIALIZED";
     switch(status)
@@ -111,7 +111,7 @@ static const char *get_status_string(uint8_t status)
     return status_text;
 }
 
-static const char *get_system_string(uint8_t status)
+static char *get_system_string(uint8_t status)
 {
     char *status_text = "WARNING";
     switch(status)
@@ -128,7 +128,7 @@ static const char *get_system_string(uint8_t status)
     return status_text;
 }
 
-static const char *get_esp32_string(uint8_t status)
+static char *get_esp32_string(uint8_t status)
 {
     char *status_text = "UNINITIALIZED";
     switch(status)
