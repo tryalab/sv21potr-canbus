@@ -94,16 +94,16 @@ def get_payloads_status_system(struct):
 
 def get_string_functions():
     return """\
-static char *get_status_string(uint8_t status)
+static const char *get_status_string(uint8_t status)
 {
-    char status_text[] = "UNINITIALIZED";
+    char *status_text = "UNINITIALIZED";
     switch(status)
     {
         case OKAY:
-            sprintf(status_text, "%s|", "OKAY");
+            status_text = "OKAY";
             break;
         case ERROR:
-            sprintf(status_text, "%s|", "ERROR");
+            status_text = "ERROR";
             break;
         default:
             break;
@@ -111,16 +111,16 @@ static char *get_status_string(uint8_t status)
     return status_text;
 }
 
-static char * get_system_string(uint8_t status)
+static const char *get_system_string(uint8_t status)
 {
-    char status_text[] = "WARNING";
+    char *status_text = "WARNING";
     switch(status)
     {
         case OKAY:
-            sprintf(status_text, "%s|", "OKAY");
+            status_text = "OKAY";
             break;
         case ERROR:
-            sprintf(status_text, "%s|", "ERROR");
+            status_text = "ERROR";
             break;
         default:
             break;
@@ -128,25 +128,25 @@ static char * get_system_string(uint8_t status)
     return status_text;
 }
 
-static char * get_esp32_string(uint8_t status)
+static const char *get_esp32_string(uint8_t status)
 {
-    char status_text[] = "UNINITIALIZED";
+    char *status_text = "UNINITIALIZED";
     switch(status)
     {
         case OKAY:
-            sprintf(status_text, "%s|", "OKAY");
+            status_text = "OKAY";
             break;
         case I2C_ERROR:
-            sprintf(status_text, "%s|", "I2C_ERROR");
+            status_text = "I2C_ERROR";
             break;
         case WIFI_ERROR:
-            sprintf(status_text, "%s|", "WIFI_ERROR");
+            status_text = "WIFI_ERROR";
             break;
         case NTP_ERROR:
-            sprintf(status_text, "%s|", "NTP_ERROR");
+            status_text = "NTP_ERROR";
             break;
         case MQTT_ERROR:
-            sprintf(status_text, "%s|", "MQTT_ERROR");
+            status_text = "MQTT_ERROR";
             break;
         default:
             break;
