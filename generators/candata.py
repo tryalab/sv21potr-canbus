@@ -2,10 +2,11 @@ def get_text(name):
    text = f"void get_{name}_text(char *text, {name}_t {name});\n"
    return text
 
-def get_text_function(name, insert_text, get_struct):
+def get_text_function(name, insert_text, get_struct, get_status):
    text = \
 f"""void get_{name}_text(char *text, {name}_t {name})
 {{
+    {get_status}
     sprintf(text, "{name.capitalize()}({insert_text})", {get_struct});
 }}
 """
@@ -13,6 +14,28 @@ f"""void get_{name}_text(char *text, {name}_t {name})
 
 def changed(name):
    text = f"bool is_{name}_changed({name}_t previous, {name}_t current);\n\n"
+   return text
+
+def if_state(get_prevous_struct, get_current_struct):
+    text = \
+f"""if({get_prevous_struct} != {get_current_struct})
+    {{
+        status = true;
+        {get_prevous_struct} = {get_current_struct};
+    }}
+    """
+    return text
+
+def changed_function(name, if_state_text):
+   text = \
+f"""bool is_{name}_changed({name}_t previous, {name}_t current)
+{{
+    bool status = false;
+
+    {if_state_text}
+    return status;
+}}
+"""
    return text
 
 def struct(struct_member, struct_name):
@@ -94,64 +117,61 @@ def get_payloads_status_system(struct):
 
 def get_string_functions():
     return """\
-static char *get_status_string(uint8_t status)
-{
-    char *status_text = "UNINITIALIZED";
+static void get_status_string(uint8_t status, char *string)
+{   
     switch(status)
     {
         case OKAY:
-            status_text = "OKAY";
+            sprintf(string, "OKAY");
             break;
         case ERROR:
-            status_text = "ERROR";
+            sprintf(string, "ERROR");
             break;
         default:
+            sprintf(string, "UNINITIALIZED");
             break;
     }
-    return status_text;
 }
 
-static char *get_system_string(uint8_t status)
+static void get_system_string(uint8_t status, char *string)
 {
-    char *status_text = "WARNING";
     switch(status)
     {
         case OKAY:
-            status_text = "OKAY";
+            sprintf(string, "OKAY");
             break;
         case ERROR:
-            status_text = "ERROR";
+            sprintf(string, "ERROR");
             break;
         default:
+            sprintf(string, "WARNING");
             break;
     }
-    return status_text;
 }
 
-static char *get_esp32_string(uint8_t status)
+static void get_esp32_string(uint8_t status, char *string)
 {
-    char *status_text = "UNINITIALIZED";
     switch(status)
     {
         case OKAY:
-            status_text = "OKAY";
+            sprintf(string, "OKAY");
             break;
         case I2C_ERROR:
-            status_text = "I2C_ERROR";
+            sprintf(string, "I2C_ERROR");
             break;
         case WIFI_ERROR:
-            status_text = "WIFI_ERROR";
+            sprintf(string, "WIFI_ERROR");
             break;
         case NTP_ERROR:
-            status_text = "NTP_ERROR";
+            sprintf(string, "NTP_ERROR");
             break;
         case MQTT_ERROR:
-            status_text = "MQTT_ERROR";
+            sprintf(string, "MQTT_ERROR");
             break;
         default:
+            sprintf(string, "UNINITIALIZED");
             break;
     }
-    return status_text;
 }"""
 
 def get_functions_payloads_inserts(messages, struct, value, key, struct_text):
@@ -159,6 +179,7 @@ def get_functions_payloads_inserts(messages, struct, value, key, struct_text):
     get_payloads = ""
     insert_inside = ""
     struct_texts = ""
+    get_status = ""
     get_type, get_values = loop_through_json_get_type_values(messages, value, key)
 
     if get_type == "bool":
@@ -172,15 +193,18 @@ def get_functions_payloads_inserts(messages, struct, value, key, struct_text):
         if get_values == ['UNINITIALIZED', 'OKAY', 'ERROR']:
             get_payloads += get_payloads_status(struct)
             insert_inside += f"{key}: %s, "
-            struct_texts += f'get_status_string({struct_text}), '
+            get_status += f'char status_input[STRLEN] = {{0}};\n\tget_status_string({struct_text}, status_input);'
+            struct_texts += 'status_input, '
         elif get_values == ['WARNING', 'OKAY', 'ERROR']:
             get_payloads += get_payloads_status_system(struct)
             insert_inside += f"{key}: %s, "
-            struct_texts += f'get_system_string({struct_text}), '
+            get_status += f'char system_input[STRLEN] = {{0}};\n\tget_system_string({struct_text}, system_input);'
+            struct_texts += 'system_input, '
         elif get_values == ['UNINITIALIZED', 'OKAY', 'I2C_ERROR', 'WIFI_ERROR', 'NTP_ERROR', 'MQTT_ERROR']:
             get_payloads += get_payloads_status_esp32(struct)
             insert_inside += f"{key}: %s, "
-            struct_texts += f'get_esp32_string({struct_text}), '
+            get_status += f'char esp32_input[STRLEN] = {{0}};\n\tget_esp32_string({struct_text}, esp32_input);'
+            struct_texts += 'esp32_input, '
         elif get_values == ['OFF', 'ON']:
             get_payloads += get_payloads_state(struct)
             insert_inside += f"{key}: %s, "
@@ -205,7 +229,7 @@ def get_functions_payloads_inserts(messages, struct, value, key, struct_text):
                         insert_inside += f"{key}: %u, "
             get_payloads += get_payloads_value(typespec, struct)
 
-    return get_functions, get_payloads, insert_inside, struct_texts
+    return get_functions, get_payloads, insert_inside, struct_texts, get_status
 
 def get_payloads_status_esp32(struct):
     text = f"""\
@@ -334,6 +358,8 @@ def get_candata_source(nodes, messages):
     insert_inside = ""
     struct_text =""
     insert_struct_text = ""
+    get_statuses = ""
+    if_state_texts = ""
 
     for node in nodes.values():
         name = node.get("name")
@@ -341,31 +367,39 @@ def get_candata_source(nodes, messages):
             if type(value_signal) is not dict:
                 if key_signal != "name":
                     struct = f"data.{name}.{key_signal}"
-                    get_function, payloads_function, _, _ = get_functions_payloads_inserts(messages, struct, value_signal, key_signal, struct_text)
+                    get_function, payloads_function, _, _, _ = get_functions_payloads_inserts(messages, struct, value_signal, key_signal, struct_text)
                     get_functions += get_function
                     payloads_functions += payloads_function
             else:
                 for key_inside_signal, value_inside_signal in value_signal.items():
                     
-                    _, _, insert, _ = get_functions_payloads_inserts(messages, struct, value_inside_signal, key_inside_signal, struct_text)
+                    _, _, insert, _, _ = get_functions_payloads_inserts(messages, struct, value_inside_signal, key_inside_signal, struct_text)
                     if type(value_inside_signal) is not dict:
                         struct = f"data.{name}.{key_signal}.{key_inside_signal}"
                         struct_text = f"{key_signal}.{key_inside_signal}"
-                        get_function, payloads_function, insert, struct_texts = get_functions_payloads_inserts(messages, struct, value_inside_signal, key_inside_signal, struct_text)
+                        previous_text = f"previous.{key_inside_signal}"
+                        current_text = f"current.{key_inside_signal}"
+                        if_state_texts += if_state(previous_text, current_text)
+                        get_function, payloads_function, insert, struct_texts, get_status = get_functions_payloads_inserts(messages, struct, value_inside_signal, key_inside_signal, struct_text)
                         insert_struct_text += struct_texts
+                        get_statuses += get_status
                         insert_inside += insert
                         get_functions += get_function
                         payloads_functions += payloads_function
                     else:
                         
-                        _, _, insert, _ = get_functions_payloads_inserts(messages, struct, value_inside_signal, key_inside_signal, struct_text)
+                        _, _, insert, _, _ = get_functions_payloads_inserts(messages, struct, value_inside_signal, key_inside_signal, struct_text)
                         insert_inside += insert
                         for key_min_max, value_min_max in value_inside_signal.items():
                             if type(value_min_max) is not dict:
                                 struct = f"data.{name}.{key_signal}.{key_inside_signal}.{key_min_max}"
                                 struct_text = f"{key_signal}.{key_inside_signal}.{key_min_max}"
-                                get_function, payloads_function, insert, struct_texts = get_functions_payloads_inserts(messages, struct, value_min_max, key_min_max, struct_text)
+                                previous_text = f"previous.{key_inside_signal}.{key_min_max}"
+                                current_text = f"current.{key_inside_signal}.{key_min_max}"
+                                if_state_texts += if_state(previous_text, current_text)
+                                get_function, payloads_function, insert, struct_texts, get_status = get_functions_payloads_inserts(messages, struct, value_min_max, key_min_max, struct_text)
                                 insert_struct_text += struct_texts
+                                get_statuses += get_status
                                 insert_inside += insert
                                 get_functions += get_function
                                 payloads_functions += payloads_function
@@ -374,12 +408,16 @@ def get_candata_source(nodes, messages):
                                     if type(value_inside_min_max) is not dict:
                                         if key_inside_min_max == "value":
                                             struct_text = f"{key_signal}.{key_inside_signal}.{key_min_max}.{key_inside_min_max}"
+                                            previous_text = f"previous.{key_inside_signal}.{key_min_max}.{key_inside_min_max}"
+                                            current_text = f"current.{key_inside_signal}.{key_min_max}.{key_inside_min_max}"
+                                            if_state_texts += if_state(previous_text, current_text)
                                         else:
                                             struct_text = ""
                                         struct = f"data.{name}.{key_signal}.{key_inside_signal}.{key_min_max}.{key_inside_min_max}"
-                                        get_function, payloads_function, _, struct_texts = get_functions_payloads_inserts(messages, struct, value_inside_min_max, key_inside_min_max, struct_text)
+                                        get_function, payloads_function, _, struct_texts, get_status = get_functions_payloads_inserts(messages, struct, value_inside_min_max, key_inside_min_max, struct_text)
                                         if key_inside_min_max == "value":
                                             insert_struct_text += struct_texts
+                                            get_statuses += get_status
                                         get_functions += get_function
                                         payloads_functions += payloads_function
                 start = len(insert_inside) - 2
@@ -392,10 +430,13 @@ def get_candata_source(nodes, messages):
                 start = len(insert_struct_text) - 2
                 stop = start + 2
                 insert_struct_text = insert_struct_text[0:start:] + insert_struct_text[stop::]
-                text_function += get_text_function(key_signal, insert_inside, insert_struct_text)
+                text_function += get_text_function(key_signal, insert_inside, insert_struct_text, get_statuses)
+                text_function += changed_function(key_signal, if_state_texts)
 
+                get_statuses = ""
                 insert_inside = ""
                 insert_struct_text = ""
+                if_state_texts = ""
     text = \
 f"""                         
 #include <stdio.h>         
@@ -403,6 +444,7 @@ f"""
 #include "common.h"
 #include "canbus.h"
 #include "candata.h"
+#define STRLEN 13 
 
 {get_string_functions()}
 
