@@ -2,12 +2,10 @@ from textwrap import dedent
 
 
 def get_json_txt(node, messages):
-
-    str = f"Input signals\n"
-
     # skapar en sträng str som sen används för att fylla påmed  de olika delarna
     # för att till slut användas för att skriva till fil. signals.txt
-    str = f"Input signals\n"
+
+    str = f"Output signals\n"
     header = {'first': 'Name', 'Second': 'Type',
               'third': ' Description', 'fourth': 'Values'}
     str += dedent(f'''
@@ -24,7 +22,7 @@ def get_json_txt(node, messages):
                 else:
                     str += f"{signal['name']:<31}| {signal['type']:<11}| {signal['comment']:<51}| {signal['values']}\n"
 
-    str += f"\n\nOutput signals\n"
+    str += f"\n\nInput signals\n"
     str += dedent(f'''
     {header['first']:<31}| {header['Second']:<11}| {header['third']:<51}| {header['fourth']:<10}
     {"":->110}
