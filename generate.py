@@ -6,6 +6,8 @@ from pathlib import Path
 from generators import service
 from generators import common
 from generators import canbus
+from generators import signals
+from generators import candata
 
 ROOT = Path(__file__).parent
 
@@ -24,7 +26,6 @@ try:
 except:
     print("Failed to open the json file")
     exit(1)
-
 
 def print_arg_error():
     print("Error...")
@@ -51,6 +52,7 @@ else:
 ESP32_INCLUDE_DIR = None
 TEENSY_INCLUDE_DIR = Path(ROOT.parent, 'include')
 TEENSY_CANBUS_DIR = Path(ROOT.parent, 'lib', 'canbus')
+
 if node == 'com':
     ESP32_INCLUDE_DIR = Path(ROOT.parent, 'esp32', 'include')
     TEENSY_INCLUDE_DIR = Path(ROOT.parent, 'teensy', 'include')
@@ -78,6 +80,8 @@ def write_file(file_name, content):
         print("Failed to write to {}".format(file_name))
         exit(4)
 
+nodes = data['nodes']
+del data['nodes']
 
 defines = data['defines']
 del data['defines']
@@ -103,10 +107,25 @@ for message in messages:
 write_file(Path(TEENSY_CANBUS_DIR, 'can_service.cpp'),
            service.get_content(node, mode, messages[:]))
 
+write_file(Path(TEENSY_CANBUS_DIR, 'canbus.h'),
+           canbus.get_canbus_header(node, mode, messages[:]))
+
+write_file(Path(TEENSY_CANBUS_DIR, 'canbus.cpp'),
+           canbus.get_canbus_source(node, mode, messages[:]))
+
 write_file(Path(TEENSY_INCLUDE_DIR, 'common.h'),
            common.get_teensy_common_header(node, messages[:]))
 
+write_file(Path(TEENSY_CANBUS_DIR, 'signals.txt'),
+           signals.get_json_txt(node, messages[:]))
 
 if ESP32_INCLUDE_DIR != None:
     write_file(Path(ESP32_INCLUDE_DIR, 'common.h'),
-               common.get_esp32_common_header(defines))
+               common.get_esp32_common_header(defines, nodes))
+
+if node == "com":
+    write_file(Path(TEENSY_CANBUS_DIR, 'candata.h'),
+               candata.get_candata_header(nodes, messages[:]))
+    
+    write_file(Path(TEENSY_CANBUS_DIR, 'candata.cpp'),
+               candata.get_candata_source(nodes, messages[:]))

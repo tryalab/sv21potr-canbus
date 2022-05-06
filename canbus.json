@@ -1,18 +1,228 @@
 {
     "nodes": {
         "hmi": {
-            "name": "HMI"
+            "name": "hmi",
+            "status": "hmi_node_status",
+            "rgb":{
+                "status": "rgb_led_status"
+            },
+            "keypad":{
+                "status": "keypad_status"
+            },
+            "buzzer":{
+                "status": "buzzer_status"
+            },
+            "eeprom":{
+                "status": "eeprom_status"
+            },
+            "system":{
+                "status": "system_status"
+            },
+            "display":{
+                "status": "display_status"
+            }
         },
         "sns": {
-            "name": "Sensor"
+            "name": "sensor",
+            "status": "sensor_node_status",
+            "temperature":{
+                "value": "temperature",
+                "status": "dht_sensor_status",
+                "possible":{
+                    "min":{
+                        "value": "temperature_possible_min",
+                        "valid": "temperature_possible_min"
+                    },
+                    "max":{
+                        "value": "temperature_possible_max",
+                        "valid": "temperature_possible_max"
+                    }
+                },
+                "target":{
+                    "min": {
+                        "value": "temperature_target_min",
+                        "valid": "temperature_target_min"
+                    },
+                    "max":{
+                        "value": "temperature_target_max",
+                        "valid": "temperature_target_max"
+                    }
+                }
+            },
+            "humidity":{
+                "value": "humidity",
+                "status": "dht_sensor_status",
+                "possible":{
+                    "min":{
+                        "value": "humidity_possible_min",
+                        "valid": "humidity_possible_min"
+                    },
+                    "max":{
+                        "value": "humidity_possible_max",
+                        "valid": "humidity_possible_max"
+                    }
+                },
+                "target":{
+                    "min": {
+                        "value": "humidity_target_min",
+                        "valid": "humidity_target_min"
+                    },
+                    "max":{
+                        "value": "humidity_target_max",
+                        "valid": "humidity_target_max"
+                    }
+                }
+            },
+            "light":{
+                "value": "light_intensity",
+                "status": "ldr_sensor_status",
+                "target":{
+                    "min":{
+                        "value": "light_intensity_target_min",
+                        "valid": "light_intensity_target_min"
+                    },
+                    "max":{
+                        "value": "light_intensity_target_max",
+                        "valid": "light_intensity_target_max"
+                    }
+                }
+            },
+            "flow":{
+                "value": "flow_rate",
+                "updated": "flow_rate",
+                "status": "flow_meter_sensor_status"
+            },
+            "moisture":{
+                "value": "soil_moisture",
+                "status": "soil_moisture_sensor_status",
+                "target":{
+                    "min":{
+                        "value": "soil_moisture_target_min",
+                        "valid": "soil_moisture_target_min"
+                    },
+                    "max":{
+                        "value": "soil_moisture_target_max",
+                        "valid": "soil_moisture_target_max"
+                    }
+                }                
+            },
+            "water":{
+                "value": "water_level",
+                "status": "water_level_sensor_status",
+                "target":{
+                    "min":{
+                        "value": "water_level_target_min",
+                        "valid": "water_level_target_min"
+                    },
+                    "max":{
+                        "value": "water_level_target_max",
+                        "valid": "water_level_target_max"
+                    }
+                },
+                "consumedtarget":{
+                    "max":{
+                        "value": "water_consumed_target_max",
+                        "valid": "water_consumed_target_max"
+                    }
+                },
+                "time":{
+                    "max":{
+                        "value": "watering_time_max",
+                        "valid": "watering_time_max"
+                    }
+                }
+            }
         },
         "act": {
-            "name": "Actuator"
+            "name": "actuator",
+            "status": "actuator_node_status",
+            "fans":{
+                "state": "fans_state",
+                "status": "fans_status",
+                "manual":{
+                    "state": "fans_manual_state",
+                    "enabled": "fans_manual_state"
+                } 
+            },
+            "lamp":{
+                "value": "lamp_brightness",
+                "status": "lamp_status",
+                "manual": {
+                    "value": "lamp_manual_brightness",
+                    "enabled": "lamp_manual_brightness"
+                }
+            },
+            "heater":{
+                "state": "heater_state",
+                "status": "heater_status",
+                "manual": {
+                    "state": "heater_manual_state",
+                    "enabled": "heater_manual_state"
+                }                
+            },
+            "waterpump":{
+                "state": "water_pump_state",
+                "status": "water_pump_status",
+                "manual": {
+                    "state": "water_pump_manual_state",
+                    "enabled": "water_pump_manual_state"
+                }
+            },
+            "watervalve":{
+                "state": "water_valve_state",
+                "status": "water_valve_status",
+                "manual": {
+                    "state": "water_valve_manual_state",
+                    "enabled": "water_valve_manual_state"
+                }
+            },
+            "window":{
+                "state": "window_state",
+                "status": "window_status",
+                "manual": {
+                    "state": "window_manual_state",
+                    "enabled": "window_manual_state"
+                }
+            }
         },
         "com": {
-            "name": "Communication"
+            "name": "communication",
+            "status": "com_node_status",
+            "rtc": {
+                "status": "rtc_status",
+                "year":{
+                    "value": "rtc_year" 
+                },
+                "month": {
+                    "value": "rtc_month"
+                },
+                "day": {
+                    "value": "rtc_day"
+                },
+                "hour": {
+                    "value": "rtc_hour"
+                },
+                "minute": {
+                    "value": "rtc_minute"
+                },
+                "second": {
+                    "value": "rtc_second"
+                }
+                
+            },
+            "esp32": {
+                "status": "esp32_status"
+            },
+            "sdcard": {
+                "value": "sdcard_free_space",
+                "status": "sdcard_status"
+            },
+            "terminal": {
+                "status": "terminal_status"
+            }
         }
     },
+    
     "defines": {
         "states"  : ["OFF", "ON"],
         "vlvwin"  : ["CLSD", "OPNND"],
@@ -43,17 +253,17 @@
             "id":"0x101",
             "setter":"sns",
             "signals":[
-                {"name":"temperature",                                 "type":"float",   "start": 0,  "length": 10, "range": [0.0, 50.0], "getters": ["act", "hmi", "com"], "comment": "ambient temperature"},
-                {"name":"humidity",                                    "type":"uint8_t", "start": 10, "length": 7,  "range": [0, 100],    "getters": ["act", "hmi", "com"], "comment": "ambient humidity percentage"},
-                {"name":"dht_sensor_status",                           "type":"uint8_t", "start": 17, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com"], "comment": "DHT sensor status"},
-                {"name":"light_intensity",                             "type":"uint8_t", "start": 19, "length": 7,  "range": [0, 100],    "getters": ["act", "hmi", "com"], "comment": "light intensity percentage"},
-                {"name":"ldr_sensor_status",                           "type":"uint8_t", "start": 26, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com"], "comment": "light intensity sensor status"},
-                {"name":"flow_rate",                   "update": true, "type":"uint16_t","start": 28, "length": 10, "range": [17, 500],   "getters": ["act", "hmi", "com"], "comment": "water flow rate"},
-                {"name":"flow_meter_sensor_status",                    "type":"uint8_t", "start": 38, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com"], "comment": "flow meter sensor status"},
-                {"name":"water_level",                                 "type":"uint8_t", "start": 40, "length": 7,  "range": [0, 100],    "getters": ["act", "hmi", "com"], "comment": "water level percentage"},
-                {"name":"water_level_sensor_status",                   "type":"uint8_t", "start": 47, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com"], "comment": "water level sensor status"},
-                {"name":"soil_moisture",                               "type":"uint8_t", "start": 49, "length": 7,  "range": [0, 100],    "getters": ["act", "hmi", "com"], "comment": "soil moisture percentage"},
-                {"name":"soil_moisture_sensor_status",                 "type":"uint8_t", "start": 56, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com"], "comment": "soil moisture sensor status"},
+                {"name":"temperature",                                 "type":"float",   "start": 0,  "length": 10, "range": [0.0, 50.0], "getters": ["act", "hmi", "com"],        "comment": "ambient temperature"},
+                {"name":"humidity",                                    "type":"uint8_t", "start": 10, "length": 7,  "range": [0, 100],    "getters": ["act", "hmi", "com"],        "comment": "ambient humidity percentage"},
+                {"name":"dht_sensor_status",                           "type":"uint8_t", "start": 17, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com", "sns"], "comment": "DHT sensor status"},
+                {"name":"light_intensity",                             "type":"uint8_t", "start": 19, "length": 7,  "range": [0, 100],    "getters": ["act", "hmi", "com"],        "comment": "light intensity percentage"},
+                {"name":"ldr_sensor_status",                           "type":"uint8_t", "start": 26, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com", "sns"], "comment": "light intensity sensor status"},
+                {"name":"flow_rate",                   "update": true, "type":"uint16_t","start": 28, "length": 10, "range": [17, 500],   "getters": ["act", "hmi", "com"],        "comment": "water flow rate"},
+                {"name":"flow_meter_sensor_status",                    "type":"uint8_t", "start": 38, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com", "sns"], "comment": "flow meter sensor status"},
+                {"name":"water_level",                                 "type":"uint8_t", "start": 40, "length": 7,  "range": [0, 100],    "getters": ["act", "hmi", "com"],        "comment": "water level percentage"},
+                {"name":"water_level_sensor_status",                   "type":"uint8_t", "start": 47, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com", "sns"], "comment": "water level sensor status"},
+                {"name":"soil_moisture",                               "type":"uint8_t", "start": 49, "length": 7,  "range": [0, 100],    "getters": ["act", "hmi", "com"],        "comment": "soil moisture percentage"},
+                {"name":"soil_moisture_sensor_status",                 "type":"uint8_t", "start": 56, "length": 2,  "values": "status",   "getters": ["act", "hmi", "com", "sns"], "comment": "soil moisture sensor status"},
                 {"name":"sensor_node_status",                          "type":"uint8_t", "start": 58, "length": 2,  "values": "system",   "getters": ["hmi", "com"],        "comment": "status of the sensor node"}
             ]
         },
@@ -62,17 +272,17 @@
             "setter":"act",
             "signals":[
                 {"name":"heater_state",         "type":"uint8_t", "start": 0,   "length": 1, "values": "states", "getters": ["hmi", "com"], "comment": "heater state"},
-                {"name":"fans_state",           "type":"uint8_t", "start": 1,   "length": 1, "values": "states", "getters": ["hmi", "com"], "comment": "fan state"},
-                {"name":"window_state",         "type":"uint8_t", "start": 2,   "length": 1, "values": "vlvwin", "getters": ["hmi", "com"], "comment": "window state"},
+                {"name":"fans_state",           "type":"uint8_t", "start": 1,   "length": 1, "values": "states", "getters": ["hmi", "com", "act"], "comment": "fan state"},
+                {"name":"window_state",         "type":"uint8_t", "start": 2,   "length": 1, "values": "vlvwin", "getters": ["hmi", "com", "act"], "comment": "window state"},
                 {"name":"lamp_brightness",      "type":"uint8_t", "start": 3,   "length": 7, "range" : [0, 100], "getters": ["hmi", "com"], "comment": "brightness of the lamp in percent"},
                 {"name":"water_valve_state",    "type":"uint8_t", "start": 10,  "length": 1, "values": "vlvwin", "getters": ["hmi", "com"], "comment": "state of water valve"},
                 {"name":"water_pump_state",     "type":"uint8_t", "start": 11,  "length": 1, "values": "states", "getters": ["hmi", "com"], "comment": "water pump state"},
-                {"name":"heater_status",        "type":"uint8_t", "start": 12,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of heater"},
-                {"name":"fans_status",          "type":"uint8_t", "start": 14,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the fans"},
-                {"name":"window_status",        "type":"uint8_t", "start": 16,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the heater"},
-                {"name":"lamp_status",          "type":"uint8_t", "start": 18,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "LED lamp status"},
-                {"name":"water_valve_status",   "type":"uint8_t", "start": 20,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the water valve"},
-                {"name":"water_pump_status",    "type":"uint8_t", "start": 22,  "length": 2, "values": "status", "getters": ["hmi", "com"], "comment": "status of the water pump"},
+                {"name":"heater_status",        "type":"uint8_t", "start": 12,  "length": 2, "values": "status", "getters": ["hmi", "com", "act"], "comment": "status of heater"},
+                {"name":"fans_status",          "type":"uint8_t", "start": 14,  "length": 2, "values": "status", "getters": ["hmi", "com", "act"], "comment": "status of the fans"},
+                {"name":"window_status",        "type":"uint8_t", "start": 16,  "length": 2, "values": "status", "getters": ["hmi", "com", "act"], "comment": "status of the heater"},
+                {"name":"lamp_status",          "type":"uint8_t", "start": 18,  "length": 2, "values": "status", "getters": ["hmi", "com", "act"], "comment": "LED lamp status"},
+                {"name":"water_valve_status",   "type":"uint8_t", "start": 20,  "length": 2, "values": "status", "getters": ["hmi", "com", "act"], "comment": "status of the water valve"},
+                {"name":"water_pump_status",    "type":"uint8_t", "start": 22,  "length": 2, "values": "status", "getters": ["hmi", "com", "act"], "comment": "status of the water pump"},
                 {"name":"actuator_node_status", "type":"uint8_t", "start": 24,  "length": 2, "values": "system", "getters": ["hmi", "com"], "comment": "status of the actuator node"}
             ]
         },
@@ -80,12 +290,12 @@
             "id":"0x103",
             "setter":"hmi",
             "signals":[
-                {"name":"water_valve_manual_state", "control": true,     "type": "uint8_t", "start": 0,  "length": 2, "values":"vlvwin", "getters": ["com", "act"], "comment":"control state of the water valve manually"},
-                {"name":"heater_manual_state",      "control": true,     "type": "uint8_t", "start": 2,  "length": 2, "values":"states", "getters": ["com", "act"], "comment":"control state of the heater manually"},
-                {"name":"window_manual_state",      "control": true,     "type": "uint8_t", "start": 4,  "length": 2, "values":"vlvwin", "getters": ["com", "act"], "comment":"control state of the window manually"},
-                {"name":"fans_manual_state",        "control": true,     "type": "uint8_t", "start": 6,  "length": 2, "values":"states", "getters": ["com", "act"], "comment":"control state of the fans manually"},
-                {"name":"water_pump_manual_state",  "control": true,     "type": "uint8_t", "start": 8,  "length": 2, "values":"states", "getters": ["com", "act"], "comment":"control state of the water pump manually"},
-                {"name":"lamp_manual_brightness",   "control": true,     "type": "uint8_t", "start": 10, "length": 8, "range": [0, 100], "getters": ["com", "act"], "comment":"control brightness of the LED lamp manually"},
+                {"name":"water_valve_manual_state", "control": true,     "type": "uint8_t", "start": 0,  "length": 2, "values":"vlvwin", "getters": ["com", "hmi", "act"], "comment":"control state of the water valve manually"},
+                {"name":"heater_manual_state",      "control": true,     "type": "uint8_t", "start": 2,  "length": 2, "values":"states", "getters": ["com", "hmi", "act"], "comment":"control state of the heater manually"},
+                {"name":"window_manual_state",      "control": true,     "type": "uint8_t", "start": 4,  "length": 2, "values":"vlvwin", "getters": ["com", "hmi", "act"], "comment":"control state of the window manually"},
+                {"name":"fans_manual_state",        "control": true,     "type": "uint8_t", "start": 6,  "length": 2, "values":"states", "getters": ["com", "hmi", "act"], "comment":"control state of the fans manually"},
+                {"name":"water_pump_manual_state",  "control": true,     "type": "uint8_t", "start": 8,  "length": 2, "values":"states", "getters": ["com", "hmi", "act"], "comment":"control state of the water pump manually"},
+                {"name":"lamp_manual_brightness",   "control": true,     "type": "uint8_t", "start": 10, "length": 8, "range": [0, 100], "getters": ["com", "hmi", "act"], "comment":"control brightness of the LED lamp manually"},
                 {"name":"display_status",                                "type": "uint8_t", "start": 18, "length": 2, "values":"status", "getters": ["com", "hmi"], "comment":"status of the display"},
                 {"name":"buzzer_status",                                 "type": "uint8_t", "start": 20, "length": 2, "values":"status", "getters": ["com", "hmi"], "comment":"status of the buzzer"},
                 {"name":"rgb_led_status",                                "type": "uint8_t", "start": 22, "length": 2, "values":"status", "getters": ["com", "hmi"], "comment":"status of the RGB LED"},
